@@ -1,0 +1,19 @@
+"""
+ISO datetime (maps to JS Date, stored as MySQL DATETIME).
+Implement with a DateTime scalar in your server.
+"""
+scalar DateTime
+
+type Party {
+  id: Int!
+  name: String!
+  symbol: String!
+  short_name: String!
+  party_type: String!
+  created_at: DateTime!
+}
+
+type Query {
+  party(id: Int!): Party
+  parties: [Party!]!
+}

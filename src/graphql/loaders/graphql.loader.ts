@@ -4,6 +4,12 @@ import { loadFilesSync } from "@graphql-tools/load-files";
 import { mergeTypeDefs, mergeResolvers } from "@graphql-tools/merge";
 import { candidateResolvers } from "../resolvers/candidate.resolver";
 import { voterResolvers } from "../resolvers/voter.resolver";
+import { authResolvers } from '../resolvers/auth.resolver';
+import { partyResolvers } from "../resolvers/party.resolver";
+import { electionResolvers } from "../resolvers/election.resolver";
+import { constituencyResolvers } from "../resolvers/constituency.resolver";
+import { electionCandidateResolvers } from "../resolvers/election_candidate.resolver";
+import { electionResultResolvers } from "../resolvers/election_result.resolver";
 
 const schemaPath = join(process.cwd(), "src/graphql/schema");
 
@@ -15,7 +21,16 @@ export function buildGraphQL() {
     });
 
     const typeDefs = mergeTypeDefs(typeDefsArray);
-    const resolvers = mergeResolvers([candidateResolvers, voterResolvers]);
+    const resolvers = mergeResolvers([
+        candidateResolvers,
+        voterResolvers,
+        authResolvers,
+        partyResolvers,
+        electionResolvers,
+        constituencyResolvers,
+        electionCandidateResolvers,
+        electionResultResolvers
+    ]);
 
     return { typeDefs, resolvers };
 }
