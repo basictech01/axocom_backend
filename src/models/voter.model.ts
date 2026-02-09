@@ -55,5 +55,4 @@ export interface Voter extends RowDataPacket {
     error_message: string;
     last_attempt: Date;
     created_at: Date;
-    updated_at: Date;
 }
