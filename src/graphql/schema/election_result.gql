@@ -7,6 +7,7 @@ scalar DateTime
 type ElectionResult {
   id: Int!
   election_candidate_id: Int!
+  election_candidate: ElectionCandidate  # resolved by field resolver via DataLoader
   votes_polled: Int!
   rank: Int!
   status: String!
@@ -16,4 +17,5 @@ type ElectionResult {
 type Query {
   election_result(id: Int!): ElectionResult
   election_results: [ElectionResult!]!
+  constituency_results(constituency_id: Int!, election_year: Int!): [ElectionResult!]!
 }

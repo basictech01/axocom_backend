@@ -36,5 +36,15 @@ export const electionResultResolvers = {
 
             return result.value;
         },
+
+        constituency_results: async (_: any, { constituency_id, election_year }: { constituency_id: number; election_year: number }) => {
+            const result = await electionResultRepository.getByConstituencyIdAndYear(constituency_id, election_year);
+            if (result.isErr()) {
+                throw new GraphQLError('Failed to fetch constituency results', {
+                    extensions: { code: 'INTERNAL_SERVER_ERROR' },
+                });
+            }
+            return result.value;
+        },
     },
 };

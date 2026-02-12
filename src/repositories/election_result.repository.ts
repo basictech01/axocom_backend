@@ -45,7 +45,26 @@ class ElectionResultRepository {
         }
     }
 
-    // add pagination for getAll later
+    /**
+     * Get election results by constituency ID and election year
+     */
+
+    async getByConstituencyIdAndYear(constituencyId: number, electionYear: number): Promise<Result<ElectionResult[], RequestError>> {
+        try {
+            const [rows] = await db.execute<ElectionResult[]>(
+                `SELECT er.* FROM ${ELECTION_RESULT_TABLE} er
+                JOIN election_candidate ec ON er.election_candidate_id = ec.id
+                JOIN election e ON ec.election_id = e.id
+                WHERE ec.constituency_id = ? AND e.year = ?
+                ORDER BY er.rank ASC`,
+                [constituencyId, electionYear]
+            );
+            return ok(rows);
+        } catch (error) {
+            logger.error('Error fetching results by constituency:', error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
 }
 
 // Export singleton instance

@@ -45,7 +45,21 @@ class ElectionCandidateRepository {
         }
     }
 
-    // add pagination for getAll later
+    /**
+     * Get election candidates by constituency and election year
+     */
+    async getByConstituencyAndYear(
+        constituencyId: number,
+        electionYear: number
+    ): Promise<Result<ElectionCandidate[], RequestError>> {
+        const [rows] = await db.execute<ElectionCandidate[]>(
+            `SELECT ec.* FROM ${ELECTION_CANDIDATE_TABLE} ec
+             JOIN election e ON ec.election_id = e.id
+             WHERE ec.constituency_id = ? AND e.year = ?`,
+            [constituencyId, electionYear]
+        );
+        return ok(rows);
+    }
 }
 
 // Export singleton instance

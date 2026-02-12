@@ -16,7 +16,7 @@ import { buildGraphQL } from './graphql/loaders/graphql.loader';
 import { notFoundHandler } from './middleware/error.middleware';
 // import candidateRouter from './rest/routes/candidate.route';
 import { optionalAuth } from './middleware/auth.middleware';
-
+import { createLoaders } from './graphql/loaders/dataloader';
 // async function startGraphQLServer() {
 //     const typeDefs = readFileSync(
 //         join(process.cwd(), 'src/graphql/schema/candidate.schema.graphql'),
@@ -87,7 +87,7 @@ async function startServer() {
         express.json(),
         optionalAuth,
         expressMiddleware(apollo, {
-            context: async ({ req }) => ({ req, user: req.user ?? null }),
+            context: async ({ req }) => ({ req, user: req.user ?? null, loaders: createLoaders() }),
         })
     );
 

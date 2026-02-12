@@ -9,10 +9,13 @@ type Constituency {
   name: String!
   state: String!
   ac_number: Int!
+  number_of_polling_stations: Int!
   created_at: DateTime!
 }
 
 type Query {
   constituency(id: Int!): Constituency
   constituencies: [Constituency!]!
+    constituenciesByState(state: String!): [Constituency!]!
+
 }
