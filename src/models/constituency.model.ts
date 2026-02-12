@@ -6,6 +6,7 @@ CREATE TABLE constituency (
     name VARCHAR(255) NOT NULL,
     state VARCHAR(255) NOT NULL,
     ac_number INT NOT NULL,
+    number_of_polling_stations INT NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
 `;
@@ -17,6 +18,7 @@ export interface Constituency extends RowDataPacket {
     name: string;
     state: string;
     ac_number: number;
+    number_of_polling_stations: number;
     created_at: Date;
 }
 

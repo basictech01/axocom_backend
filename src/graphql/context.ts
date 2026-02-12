@@ -1,10 +1,12 @@
 import { GraphQLError } from 'graphql';
 import { Request } from 'express';
 import { TokenData } from '../utils/jwt';
+import { Loaders } from './loaders/dataloader';
 
 export interface GraphQLContext {
     req: Request;
     user: TokenData | null;
+    loaders: Loaders;
 }
 
 export function requireAuth(context: GraphQLContext): TokenData {

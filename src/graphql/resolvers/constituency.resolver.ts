@@ -36,5 +36,15 @@ export const constituencyResolvers = {
 
             return result.value;
         },
+        constituenciesByState: async (_: any, { state }: { state: string }): Promise<Constituency[]> => {
+            const result = await constituencyRepository.getByState(state);
+            if (result.isErr()) {
+                logger.error('Error fetching constituencies by state:', result.error);
+                throw new GraphQLError('Failed to fetch constituencies by state', {
+                    extensions: { code: 'INTERNAL_SERVER_ERROR' },
+                });
+            }
+            return result.value;
+        },
     },
 };

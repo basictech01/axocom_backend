@@ -11,7 +11,7 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - ./database/db_data:/var/lib/mysql
+      - axocom_db_data:/var/lib/mysql
       # - ./src/database/01-tables.sql:/docker-entrypoint-initdb.d/01-tables.sql
       # - ./src/database/02-data.sql:/docker-entrypoint-initdb.d/02-data.sql
       # - ./src/database/03-dump.sql:/docker-entrypoint-initdb.d/03-dump.sql
@@ -69,4 +69,5 @@ services:
     command: ["npm", "run", "dev"]
 
 volumes:
-  db_data:
+  axocom_db_data:
+    name: axocom_db_data

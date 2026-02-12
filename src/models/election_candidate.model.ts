@@ -6,7 +6,7 @@ CREATE TABLE election_candidate (
     election_id INT NOT NULL,
     FOREIGN KEY (election_id) REFERENCES election(id),
     candidate_id INT NOT NULL,
-    FOREIGN KEY (candidate_id) REFERENCES candidate(id),
+    FOREIGN KEY (candidate_id) REFERENCES candidates(id),
     constituency_id INT NOT NULL,
     FOREIGN KEY (constituency_id) REFERENCES constituency(id),
     party_id INT NOT NULL,

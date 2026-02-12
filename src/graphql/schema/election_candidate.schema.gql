@@ -11,9 +11,12 @@ type ElectionCandidate {
   constituency_id: Int!
   party_id: Int!
   created_at: DateTime!
+  candidate: Candidate      # resolved by field resolver — type from candidate.schema.gql
+  party: Party               # resolved by field resolver — type from party.schema.gql
 }
 
 type Query {
   election_candidate(id: Int!): ElectionCandidate
   election_candidates: [ElectionCandidate!]!
+  constituency_candidates(constituency_id: Int!, election_year: Int!): [ElectionCandidate!]!
 }

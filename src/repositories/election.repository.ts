@@ -44,8 +44,34 @@ class ElectionRepository {
             return err(ERRORS.DATABASE_ERROR);
         }
     }
+    async getByConstituencyId(constituencyId: number): Promise<Result<Election[], RequestError>> {
+        try {
+            const [rows] = await db.execute<Election[]>(
+                `SELECT * FROM ${ELECTION_TABLE} WHERE constituency_id = ? ORDER BY year ASC`,
+                [constituencyId]
+            );
+            return ok(rows);
+        } catch (error) {
+            logger.error('Error fetching elections by constituency:', error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
 
-    // add pagination for getAll later
+    async getByConstituencyIdAndYear(constituencyId: number, year: number): Promise<Result<Election | null, RequestError>> {
+        try {
+            const [rows] = await db.execute<Election[]>(
+                `SELECT * FROM ${ELECTION_TABLE} WHERE constituency_id = ? AND year = ?`,
+                [constituencyId, year]
+            );
+            if (rows.length === 0) {
+                return err(ERRORS.ELECTION_NOT_FOUND);
+            }
+            return ok(rows[0]);
+        } catch (error) {
+            logger.error('Error fetching election by constituency and year:', error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
 }
 
 // Export singleton instance

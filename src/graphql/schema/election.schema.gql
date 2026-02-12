@@ -10,6 +10,10 @@ type Election {
   start_date: DateTime!
   end_date: DateTime!
   year: Int!
+  constituency_id: Int!
+  total_voters: Int!
+  male_voters: Int!
+  female_voters: Int!
   type: String!
   created_at: DateTime!
 }
@@ -17,4 +21,6 @@ type Election {
 type Query {
   election(id: Int!): Election
   elections: [Election!]!
+  electionByConstituencyAndYear(constituency_id: Int!, year: Int!): Election
+  electionsByConstituencyId(constituency_id: Int!): [Election!]!
 }

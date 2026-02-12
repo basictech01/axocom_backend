@@ -45,7 +45,19 @@ class ConstituencyRepository {
         }
     }
 
-    // add pagination for getAll later
+    async getByState(state: string): Promise<Result<Constituency[], RequestError>> {
+        try {
+            const [rows] = await db.execute<Constituency[]>(
+                `SELECT * FROM ${CONSTITUENCY_TABLE} WHERE state = ? ORDER BY name ASC`,
+                [state]
+            );
+            return ok(rows);
+        } catch (error) {
+            logger.error('Error fetching constituencies by state:', error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
+
 }
 
 // Export singleton instance
