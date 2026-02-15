@@ -5,6 +5,7 @@ CREATE TABLE candidates (
     id INT AUTO_INCREMENT PRIMARY KEY,
     neta_id INT NOT NULL, -- Unique identifier for the candidate on the myneta info
     name VARCHAR(255) NOT NULL,
+    caste VARCHAR(255),
     so_do_wo VARCHAR(255),
     age INT NOT NULL,
     candidate_image VARCHAR(255),
@@ -36,6 +37,7 @@ export interface Candidate extends RowDataPacket {
     id: number;
     neta_id: number; // Unique identifier for the candidate on the myneta info
     name: string;
+    caste: string;
     so_do_wo: string;
     age: number;
     candidate_image: string;

@@ -71,6 +71,7 @@ export const ERRORS = {
     ADMIN_ONLY_ROUTE: new RequestError("Admin access required", 20007, 403),
     JWT_SECRET_NOT_CONFIGURED: new RequestError("JWT configuration error", 20008, 500),
     INSUFFICIENT_PERMISSIONS: new RequestError("Insufficient permissions", 20009, 403),
+    USER_NOT_FOUND: new RequestError("User not found", 20010, 404),
     // New OTP related errors
     INVALID_OTP: new RequestError("Invalid or expired OTP", 20010, 400),
     OTP_EXPIRED: new RequestError("OTP has expired", 20011, 400),
@@ -90,36 +91,15 @@ export const ERRORS = {
     ADMIN_ACCOUNT_DISABLED: new RequestError("Admin account is disabled", 40007, 403),
 
     // Voter Service Errors (5xxxx)
+    VOTER_NOT_FOUND: new RequestError("Voter not found", 50001, 404),
+    PARTY_NOT_FOUND: new RequestError("Party not found", 50002, 404),
+    CONSTITUENCY_NOT_FOUND: new RequestError("Constituency not found", 50003, 404),
+    ELECTION_CANDIDATE_NOT_FOUND: new RequestError("Election candidate not found", 50004, 404),
+    ELECTION_RESULT_NOT_FOUND: new RequestError("Election result not found", 50005, 404),
+    ELECTION_NOT_FOUND: new RequestError("Election not found", 50006, 404),
+    USER_ALREADY_EXISTS: new RequestError("User already exists", 50007, 409),
 
-    // Web Story Service Errors (6xxxx)
-    WEB_STORY_NOT_FOUND: new RequestError("Web story not found", 60001, 404),
-    WEB_STORY_CREATION_FAILED: new RequestError("Failed to create web story", 60002, 500),
-    WEB_STORY_UPDATE_FAILED: new RequestError("Failed to update web story", 60003, 500),
-    WEB_STORY_DELETE_FAILED: new RequestError("Failed to delete web story", 60004, 500),
-    INVALID_WEB_STORY_DATA: new RequestError("Invalid web story data", 60005, 400),
-    WEB_STORY_PERMISSION_DENIED: new RequestError("Permission denied for this web story", 60006, 403),
 
-    // File/Media Service Errors (7xxxx)
-    FILE_UPLOAD_FAILED: new RequestError("File upload failed", 70001, 500),
-    INVALID_FILE_TYPE: new RequestError("Invalid file type", 70002, 400),
-    FILE_TOO_LARGE: new RequestError("File size exceeds limit", 70003, 400),
-    FILE_DELETE_FAILED: new RequestError("Failed to delete file", 70004, 500),
-    FILE_PROCESSING_FAILED: new RequestError("File processing failed", 70005, 500),
-    INVALID_IMAGE_FORMAT: new RequestError("Invalid image format", 70006, 400),
-    FILE_STORAGE_ERROR: new RequestError("File storage error", 70007, 500),
-    NO_FILE_UPLOADED: new RequestError("No file uploaded", 70008, 400),
-    IMAGE_UPLOAD_FAILED: new RequestError("Image upload failed", 70009, 500),
-    CLOUDINARY_UPLOAD_ERROR: new RequestError("Cloudinary upload failed", 70010, 500),
-
-    // Advertisement Service Errors (8xxxx)
-    AD_NOT_FOUND: new RequestError("Advertisement not found", 80001, 404),
-    AD_CREATION_FAILED: new RequestError("Failed to create advertisement", 80002, 500),
-    AD_UPDATE_FAILED: new RequestError("Failed to update advertisement", 80003, 500),
-    AD_DELETE_FAILED: new RequestError("Failed to delete advertisement", 80004, 500),
-    INVALID_AD_DATA: new RequestError("Invalid advertisement data", 80005, 400),
-    AD_PERMISSION_DENIED: new RequestError("Permission denied for this advertisement", 80006, 403),
-    INVALID_AD_TYPE: new RequestError("Invalid advertisement type", 80007, 400),
-    AD_ALREADY_DELETED: new RequestError("Advertisement already deleted", 80008, 409),
 };
 
 // Helper function to check if error is a RequestError

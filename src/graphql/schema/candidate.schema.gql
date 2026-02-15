@@ -14,6 +14,7 @@ type Candidate {
   id: Int!
   neta_id: Int!
   name: String!
+  caste: String!
   so_do_wo: String
   age: Int!
   candidate_image: String
@@ -41,6 +42,7 @@ type Candidate {
 input CreateCandidateInput {
   neta_id: Int!
   name: String!
+  caste: String!
   so_do_wo: String
   age: Int!
   candidate_image: String
@@ -67,6 +69,7 @@ input CreateCandidateInput {
 input UpdateCandidateInput {
   neta_id: Int
   name: String
+  caste: String
   so_do_wo: String
   age: Int
   candidate_image: String

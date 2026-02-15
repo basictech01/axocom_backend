@@ -13,6 +13,7 @@ type ElectionCandidate {
   created_at: DateTime!
   candidate: Candidate      # resolved by field resolver — type from candidate.schema.gql
   party: Party               # resolved by field resolver — type from party.schema.gql
+  votes_polled: Int!
 }
 
 type Query {

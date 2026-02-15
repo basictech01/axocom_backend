@@ -11,6 +11,7 @@ CREATE TABLE election_candidate (
     FOREIGN KEY (constituency_id) REFERENCES constituency(id),
     party_id INT NOT NULL,
     FOREIGN KEY (party_id) REFERENCES party(id),
+    votes_polled INT NOT NULL,
     -- add more fields here as needed like votes, criminal cases, assets, etc
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
@@ -24,6 +25,7 @@ export interface ElectionCandidate extends RowDataPacket {
     candidate_id: number;
     constituency_id: number;
     party_id: number;
+    votes_polled: number;
     created_at: Date;
 }
 

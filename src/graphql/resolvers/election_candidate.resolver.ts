@@ -12,7 +12,7 @@ export const electionCandidateResolvers = {
     // Scalar resolvers
     DateTime: DateTimeResolver,
 
-    // Field resolvers — use DataLoaders for N+1 prevention
+    // Field resolvers
     ElectionCandidate: {
         candidate: (parent: ElectionCandidate, _: any, context: GraphQLContext) => {
             return context.loaders.candidateLoader.load(parent.candidate_id);
