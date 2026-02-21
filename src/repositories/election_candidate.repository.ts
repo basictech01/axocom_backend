@@ -60,6 +60,28 @@ class ElectionCandidateRepository {
         );
         return ok(rows);
     }
+
+    /**
+     * Get election candidates by candidate ID
+     */
+
+    async getByCandidateId(
+        candidateId: number
+    ): Promise<Result<ElectionCandidate[], RequestError>> {
+        try {
+            const [rows] = await db.execute<ElectionCandidate[]>(
+                `SELECT ec.*, e.year FROM ${ELECTION_CANDIDATE_TABLE} ec
+                 JOIN election e ON ec.election_id = e.id
+                 WHERE ec.candidate_id = ?
+                 ORDER BY e.year DESC`,
+                [candidateId]
+            );
+            return ok(rows);
+        } catch (error) {
+            logger.error('Error fetching election candidates by candidate id:', error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
 }
 
 // Export singleton instance

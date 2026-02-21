@@ -63,5 +63,15 @@ export const electionCandidateResolvers = {
             }
             return result.value;
         },
+
+        candidate_elections: async (_: any, { candidate_id }: { candidate_id: number }): Promise<ElectionCandidate[]> => {
+            const result = await electionCandidateRepository.getByCandidateId(candidate_id);
+            if (result.isErr()) {
+                throw new GraphQLError('Failed to fetch candidate elections', {
+                    extensions: { code: 'INTERNAL_SERVER_ERROR' },
+                });
+            }
+            return result.value;
+        },
     },
 };

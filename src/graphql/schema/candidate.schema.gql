@@ -12,7 +12,6 @@ scalar DateTime
 
 type Candidate {
   id: Int!
-  neta_id: Int!
   name: String!
   caste: String!
   so_do_wo: String
@@ -23,16 +22,9 @@ type Candidate {
   name_enrolled_as_voter_in: String!
   self_profession: String
   spouse_profession: String
-  criminal_cases: Int
-  assets: Float
-  liabilities: Float
   education_category: String
+  education_history: JSON
   university_name: String
-  pan_itr: JSON
-  details_of_criminal_cases: JSON
-  details_of_movable_assets: JSON
-  details_of_immovable_assets: JSON
-  details_of_liabilities: JSON
   source_of_income: JSON
   contracts: JSON
   social_profiles: JSON
@@ -40,7 +32,6 @@ type Candidate {
 }
 
 input CreateCandidateInput {
-  neta_id: Int!
   name: String!
   caste: String!
   so_do_wo: String
@@ -67,7 +58,6 @@ input CreateCandidateInput {
 }
 
 input UpdateCandidateInput {
-  neta_id: Int
   name: String
   caste: String
   so_do_wo: String
@@ -78,16 +68,8 @@ input UpdateCandidateInput {
   name_enrolled_as_voter_in: String
   self_profession: String
   spouse_profession: String
-  criminal_cases: Int
-  assets: Float
-  liabilities: Float
   education_category: String
   university_name: String
-  pan_itr: JSON
-  details_of_criminal_cases: JSON
-  details_of_movable_assets: JSON
-  details_of_immovable_assets: JSON
-  details_of_liabilities: JSON
   source_of_income: JSON
   contracts: JSON
   social_profiles: JSON

@@ -23,7 +23,7 @@ CREATE TABLE election_result (
   id INT AUTO_INCREMENT PRIMARY KEY,
   election_candidate_id INT NOT NULL,
   votes_polled INT NOT NULL,
-  \`rank\` INT NOT NULL,
+  position INT NOT NULL,
   status VARCHAR(255) NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 )`;
@@ -44,7 +44,7 @@ async function resetElectionResultTable() {
     const connection = await mockPool.getConnection();
     await connection.query(`DELETE FROM ${ELECTION_RESULT_TABLE}`);
     await connection.query(`
-    INSERT INTO election_result (election_candidate_id, votes_polled, \`rank\`, status) VALUES
+    INSERT INTO election_result (election_candidate_id, votes_polled, position, status) VALUES
     (1, 50000, 1, 'Won'),
     (2, 35000, 2, 'Lost'),
     (3, 40000, 1, 'Won')
@@ -98,7 +98,7 @@ describe('ElectionResultRepository', () => {
             expect(er!.id).toBe(1);
             expect(er!.election_candidate_id).toBe(1);
             expect(er!.votes_polled).toBe(50000);
-            expect(er!.rank).toBe(1);
+            expect(er!.position).toBe(1);
             expect(er!.status).toBe('Won');
         }
     });
@@ -123,7 +123,7 @@ describe('ElectionResultRepository', () => {
             expect(list).toHaveLength(3);
             expect(list[0].votes_polled).toBe(50000);
             expect(list[1].status).toBe('Lost');
-            expect(list[2].rank).toBe(1);
+            expect(list[2].position).toBe(1);
         }
     });
 

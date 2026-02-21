@@ -9,7 +9,7 @@ type ElectionResult {
   election_candidate_id: Int!
   election_candidate: ElectionCandidate  # resolved by field resolver via DataLoader
   votes_polled: Int!
-  rank: Int!
+  position: Int!
   status: String!
   created_at: DateTime!
 }

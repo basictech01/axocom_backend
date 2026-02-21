@@ -34,7 +34,7 @@ async function resetCandidateTable() {
     await connection.query(`DELETE FROM ${CANDIDATE_TABLE}`);
     await connection.query(`
     INSERT INTO candidates (
-      neta_id, name, so_do_wo, age, assembly_constituency, party, name_enrolled_as_voter_in
+      name, so_do_wo, age, assembly_constituency, party, name_enrolled_as_voter_in
     ) VALUES
     (1001, 'Candidate One', 'S/O Parent', 45, 'Mumbai North', 'BJP', 'Mumbai North'),
     (1002, 'Candidate Two', 'D/O Parent', 38, 'Mumbai South', 'INC', 'Mumbai South'),
@@ -87,7 +87,6 @@ describe('CandidateRepository', () => {
             const candidate = result.value;
             expect(candidate.id).toBe(1);
             expect(candidate.name).toBe('Candidate One');
-            expect(candidate.neta_id).toBe(1001);
             expect(candidate.party).toBe('BJP');
         }
     });
