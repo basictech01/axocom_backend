@@ -13,7 +13,7 @@ const GET_ELECTION_RESULT = `
       id
       election_candidate_id
       votes_polled
-      rank
+      position
       status
       created_at
     }
@@ -26,7 +26,7 @@ const GET_ELECTION_RESULTS = `
       id
       election_candidate_id
       votes_polled
-      rank
+      position
       status
     }
   }
@@ -58,7 +58,7 @@ describe('ElectionResult integration(schema + resolvers)', () => {
                 id: 1,
                 election_candidate_id: 10,
                 votes_polled: 50000,
-                rank: 1,
+                position: 1,
                 status: 'Won',
                 created_at: new Date('2025-01-01T10:00:00Z'),
             } as ElectionResult;
@@ -82,7 +82,7 @@ describe('ElectionResult integration(schema + resolvers)', () => {
                     id: 1,
                     election_candidate_id: 10,
                     votes_polled: 50000,
-                    rank: 1,
+                    position: 1,
                     status: 'Won',
                 });
             }
@@ -119,7 +119,7 @@ describe('ElectionResult integration(schema + resolvers)', () => {
                     id: 1,
                     election_candidate_id: 10,
                     votes_polled: 50000,
-                    rank: 1,
+                    position: 1,
                     status: 'Won',
                     created_at: new Date(),
                 } as ElectionResult,
@@ -127,7 +127,7 @@ describe('ElectionResult integration(schema + resolvers)', () => {
                     id: 2,
                     election_candidate_id: 11,
                     votes_polled: 35000,
-                    rank: 2,
+                    position: 2,
                     status: 'Lost',
                     created_at: new Date(),
                 } as ElectionResult,
@@ -152,14 +152,14 @@ describe('ElectionResult integration(schema + resolvers)', () => {
                     id: 1,
                     election_candidate_id: 10,
                     votes_polled: 50000,
-                    rank: 1,
+                    position: 1,
                     status: 'Won',
                 });
                 expect(data?.election_results[1]).toMatchObject({
                     id: 2,
                     election_candidate_id: 11,
                     votes_polled: 35000,
-                    rank: 2,
+                    position: 2,
                     status: 'Lost',
                 });
             }

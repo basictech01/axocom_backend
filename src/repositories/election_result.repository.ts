@@ -56,7 +56,7 @@ class ElectionResultRepository {
                 JOIN election_candidate ec ON er.election_candidate_id = ec.id
                 JOIN election e ON ec.election_id = e.id
                 WHERE ec.constituency_id = ? AND e.year = ?
-                ORDER BY er.rank ASC`,
+                ORDER BY er.position ASC`,
                 [constituencyId, electionYear]
             );
             return ok(rows);

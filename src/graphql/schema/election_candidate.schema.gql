@@ -3,21 +3,30 @@ ISO datetime (maps to JS Date, stored as MySQL DATETIME).
 Implement with a DateTime scalar in your server.
 """
 scalar DateTime
-
 type ElectionCandidate {
   id: Int!
+  year: Int!
   election_id: Int!
   candidate_id: Int!
   constituency_id: Int!
   party_id: Int!
-  created_at: DateTime!
-  candidate: Candidate      # resolved by field resolver — type from candidate.schema.gql
-  party: Party               # resolved by field resolver — type from party.schema.gql
   votes_polled: Int!
+  assets: Float
+  liabilities: Float
+  criminal_cases: Int
+  pan_itr: JSON
+  details_of_criminal_cases: JSON
+  details_of_movable_assets: JSON
+  details_of_immovable_assets: JSON
+  details_of_liabilities: JSON
+  created_at: DateTime!
+  candidate: Candidate
+  party: Party
 }
 
 type Query {
   election_candidate(id: Int!): ElectionCandidate
   election_candidates: [ElectionCandidate!]!
   constituency_candidates(constituency_id: Int!, election_year: Int!): [ElectionCandidate!]!
+  candidate_elections(candidate_id: Int!): [ElectionCandidate!]!
 }
