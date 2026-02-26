@@ -29,4 +29,5 @@ type Query {
   election_candidates: [ElectionCandidate!]!
   constituency_candidates(constituency_id: Int!, election_year: Int!): [ElectionCandidate!]!
   candidate_elections(candidate_id: Int!): [ElectionCandidate!]!
+  electionCandidatesByStateAndYear(state: String!, year: Int!): [ElectionCandidate!]!
 }

@@ -73,5 +73,19 @@ export const electionCandidateResolvers = {
             }
             return result.value;
         },
+
+        electionCandidatesByStateAndYear: async (
+            _: any,
+            { state, year }: { state: string; year: number }
+        ): Promise<ElectionCandidate[]> => {
+            const result = await electionCandidateRepository.getByStateAndYear(state, year);
+            if (result.isErr()) {
+                logger.error('Error fetching election candidates by state and year:', result.error);
+                throw new GraphQLError('Failed to fetch election candidates by state and year', {
+                    extensions: { code: 'INTERNAL_SERVER_ERROR' },
+                });
+            }
+            return result.value;
+        },
     },
 };
