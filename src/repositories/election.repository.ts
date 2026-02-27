@@ -72,6 +72,22 @@ class ElectionRepository {
             return err(ERRORS.DATABASE_ERROR);
         }
     }
+
+    async getByStateAndYear(state: string, year: number): Promise<Result<Election[], RequestError>> {
+        try {
+            const [rows] = await db.execute<Election[]>(
+                `SELECT e.* FROM ${ELECTION_TABLE} e
+                 JOIN constituency c ON e.constituency_id = c.id
+                 WHERE c.state = ? AND e.year = ?
+                 ORDER BY e.id ASC`,
+                [state, year]
+            );
+            return ok(rows);
+        } catch (error) {
+            logger.error('Error fetching elections by state and year:', error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
 }
 
 // Export singleton instance
