@@ -12,6 +12,7 @@ services:
       - "3307:3306"
     volumes:
       - axocom_db_data:/var/lib/mysql
+      - ./src/dummydata/03-dump.sql:/docker-entrypoint-initdb.d/03-dump.sql:ro
       # - ./src/database/01-tables.sql:/docker-entrypoint-initdb.d/01-tables.sql
       # - ./src/database/02-data.sql:/docker-entrypoint-initdb.d/02-data.sql
       # - ./src/database/03-dump.sql:/docker-entrypoint-initdb.d/03-dump.sql
