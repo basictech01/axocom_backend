@@ -14,6 +14,7 @@ type Election {
   total_voters: Int!
   male_voters: Int!
   female_voters: Int!
+  number_of_polling_stations: Int!
   type: String!
   created_at: DateTime!
 }

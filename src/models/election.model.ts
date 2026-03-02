@@ -13,6 +13,7 @@ CREATE TABLE election (
     total_voters INT NOT NULL,
     male_voters INT NOT NULL,
     female_voters INT NOT NULL,
+    number_of_polling_stations INT NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
 `;
@@ -29,6 +30,7 @@ export interface Election extends RowDataPacket {
     total_voters: number;
     male_voters: number;
     female_voters: number;
+    number_of_polling_stations: number;
     type: string;
     created_at: Date;
 }
