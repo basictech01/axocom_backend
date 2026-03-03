@@ -31,7 +31,13 @@ type Voter {
     updated_at: DateTime!
 }
 
+type VoterAgeBucket {
+  group: String!
+  total: Int!
+}
+
 type Query {
     voter(id: Int!): Voter
     voters: [Voter!]!
+    voterAgeBucketsByState(state: String!): [VoterAgeBucket!]!
 }

@@ -36,5 +36,24 @@ export const voterResolvers = {
 
             return result.value;
         },
+        voterAgeBucketsByState: async (
+            _: any,
+            { state }: { state: string }
+        ): Promise<{ group: string; total: number }[]> => {
+            const result = await voterRepository.getAgeBucketsByState(state);
+
+            if (result.isErr()) {
+                logger.error("Error fetching voter age buckets:", result.error);
+                throw new GraphQLError("Failed to fetch voter age buckets", {
+                    extensions: { code: "INTERNAL_SERVER_ERROR" },
+                });
+            }
+
+            // Map DB row shape to GraphQL field names
+            return result.value.map((row) => ({
+                group: row.age_group,
+                total: row.total,
+            }));
+        },
     },
 };

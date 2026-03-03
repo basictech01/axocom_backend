@@ -46,5 +46,21 @@ export const electionResultResolvers = {
             }
             return result.value;
         },
+
+        election_resultsByCandidateIds: async (
+            _: any,
+            { election_candidate_ids }: { election_candidate_ids: number[] }
+        ): Promise<ElectionResult[]> => {
+            const result = await electionResultRepository.getByElectionCandidateIds(
+                election_candidate_ids
+            );
+            if (result.isErr()) {
+                logger.error("Error fetching election results by candidate ids:", result.error);
+                throw new GraphQLError("Failed to fetch election results", {
+                    extensions: { code: "INTERNAL_SERVER_ERROR" },
+                });
+            }
+            return result.value;
+        },
     },
 };

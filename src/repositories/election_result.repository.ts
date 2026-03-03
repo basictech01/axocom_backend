@@ -65,6 +65,27 @@ class ElectionResultRepository {
             return err(ERRORS.DATABASE_ERROR);
         }
     }
+
+    async getByElectionCandidateIds(
+        electionCandidateIds: number[]
+    ): Promise<Result<ElectionResult[], RequestError>> {
+        try {
+            if (!electionCandidateIds.length) {
+                return ok([]);
+            }
+
+            const placeholders = electionCandidateIds.map(() => "?").join(",");
+            const [rows] = await db.execute<ElectionResult[]>(
+                `SELECT * FROM ${ELECTION_RESULT_TABLE}
+             WHERE election_candidate_id IN (${placeholders})`,
+                electionCandidateIds
+            );
+            return ok(rows);
+        } catch (error) {
+            logger.error("Error fetching election results by election_candidate_ids:", error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
 }
 
 // Export singleton instance

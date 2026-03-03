@@ -18,4 +18,5 @@ type Query {
   election_result(id: Int!): ElectionResult
   election_results: [ElectionResult!]!
   constituency_results(constituency_id: Int!, election_year: Int!): [ElectionResult!]!
+  election_resultsByCandidateIds(election_candidate_ids: [Int!]!): [ElectionResult!]!
 }
