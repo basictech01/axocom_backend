@@ -87,5 +87,47 @@ export const electionCandidateResolvers = {
             }
             return result.value;
         },
+
+        electionCandidatesByPartyAndYear: async (
+            _: any,
+            { party_id, year }: { party_id: number; year: number }
+        ): Promise<ElectionCandidate[]> => {
+            const result = await electionCandidateRepository.getByPartyAndYear(party_id, year);
+            if (result.isErr()) {
+                logger.error('Error fetching election candidates by party and year:', result.error);
+                throw new GraphQLError('Failed to fetch election candidates by party and year', {
+                    extensions: { code: 'INTERNAL_SERVER_ERROR' },
+                });
+            }
+            return result.value;
+        },
+
+        distinctYearsByParty: async (
+            _: any,
+            { party_id }: { party_id: number }
+        ): Promise<number[]> => {
+            const result = await electionCandidateRepository.getDistinctYearsByPartyId(party_id);
+            if (result.isErr()) {
+                logger.error('Error fetching distinct years by party:', result.error);
+                throw new GraphQLError('Failed to fetch years for party', {
+                    extensions: { code: 'INTERNAL_SERVER_ERROR' },
+                });
+            }
+            return result.value;
+        },
+
+        electionCandidatesByIds: async (
+            _: any,
+            { ids }: { ids: number[] }
+        ): Promise<ElectionCandidate[]> => {
+            const result = await electionCandidateRepository.getByIds(ids);
+            if (result.isErr()) {
+                logger.error('Error fetching election candidates by ids:', result.error);
+                throw new GraphQLError('Failed to fetch election candidates by ids', {
+                    extensions: { code: 'INTERNAL_SERVER_ERROR' },
+                });
+            }
+            return result.value;
+        },
     },
 };

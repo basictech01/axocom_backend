@@ -3,6 +3,7 @@ import { err, ok, Result } from "neverthrow";
 import createLogger from '../utils/logger';
 import { ERRORS, RequestError } from '../utils/error';
 import { ElectionCandidate, ELECTION_CANDIDATE_TABLE } from '../models/election_candidate.model';
+import { RowDataPacket } from "mysql2";
 
 
 const logger = createLogger('@election_candidate.repository');
@@ -96,6 +97,71 @@ class ElectionCandidateRepository {
             return ok(rows);
         } catch (error) {
             logger.error('Error fetching election candidates by state and year:', error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
+
+    /**
+     * Get election candidates by party and election year
+     */
+    async getByPartyAndYear(
+        partyId: number,
+        year: number
+    ): Promise<Result<ElectionCandidate[], RequestError>> {
+        try {
+            const [rows] = await db.execute<ElectionCandidate[]>(
+                `SELECT ec.* FROM ${ELECTION_CANDIDATE_TABLE} ec
+                 JOIN election e ON ec.election_id = e.id
+                 WHERE ec.party_id = ? AND e.year = ?`,
+                [partyId, year]
+            );
+            return ok(rows);
+        } catch (error) {
+            logger.error('Error fetching election candidates by party and year:', error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
+
+    /**
+     * Get distinct election years in which a party contested
+     */
+    async getDistinctYearsByPartyId(
+        partyId: number
+    ): Promise<Result<number[], RequestError>> {
+        try {
+            const [rows] = await db.execute<RowDataPacket[]>(
+                `SELECT DISTINCT e.year as year FROM ${ELECTION_CANDIDATE_TABLE} ec
+                 JOIN election e ON ec.election_id = e.id
+                 WHERE ec.party_id = ?
+                 ORDER BY e.year DESC`,
+                [partyId]
+            );
+            return ok(rows.map((r) => Number(r.year)));
+        } catch (error) {
+            logger.error('Error fetching distinct election years by party:', error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
+
+    /**
+     * Get election candidates by a list of IDs
+     */
+    async getByIds(
+        ids: number[]
+    ): Promise<Result<ElectionCandidate[], RequestError>> {
+        if (!ids.length) {
+            return ok([]);
+        }
+
+        try {
+            const placeholders = ids.map(() => "?").join(",");
+            const [rows] = await db.execute<ElectionCandidate[]>(
+                `SELECT * FROM ${ELECTION_CANDIDATE_TABLE} WHERE id IN (${placeholders})`,
+                ids
+            );
+            return ok(rows);
+        } catch (error) {
+            logger.error("Error fetching election candidates by ids:", error);
             return err(ERRORS.DATABASE_ERROR);
         }
     }
