@@ -5,6 +5,7 @@ CREATE TABLE candidates (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     caste VARCHAR(255),
+    gender VARCHAR(10),
     so_do_wo VARCHAR(255),
     age INT NOT NULL,
     candidate_image VARCHAR(255),
@@ -29,6 +30,7 @@ export interface Candidate extends RowDataPacket {
     id: number;
     name: string;
     caste: string;
+    gender: string;
     so_do_wo: string;
     age: number;
     candidate_image: string;
