@@ -4,8 +4,6 @@ import GraphQLJSON from 'graphql-type-json';
 import { Candidate } from '../../models/candidate.model';
 import { candidateRepository } from '../../repositories/candidate.repository';
 import createLogger from '../../utils/logger';
-import { requireAuth } from '../context';
-import type { GraphQLContext } from '../context'
 
 
 const logger = createLogger('@candidate.resolver');
@@ -16,8 +14,7 @@ export const candidateResolvers = {
   DateTime: DateTimeResolver,
 
   Query: {
-    candidate: async (_: any, { id }: { id: number }, context: GraphQLContext): Promise<Candidate | null> => {
-      requireAuth(context);
+    candidate: async (_: any, { id }: { id: number }): Promise<Candidate | null> => {
       const result = await candidateRepository.getById(id);
 
       if (result.isErr()) {
