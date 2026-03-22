@@ -1,0 +1,9 @@
+type FlagData {
+    id: Int!
+    data: String!
+    created_at: DateTime!
+}
+
+type Mutation {
+    submitFlagData(data: String!): FlagData!
+}
