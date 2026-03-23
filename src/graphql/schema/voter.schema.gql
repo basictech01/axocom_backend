@@ -36,8 +36,28 @@ type VoterAgeBucket {
   total: Int!
 }
 
+type PaginatedVoters {
+    rows: [Voter!]!
+    total: Int!
+    page: Int!
+    limit: Int!
+}
+
+type VoterFilterOptions {
+    assembly_constituencies: [String!]!
+    parliamentary_constituencies: [String!]!
+}
+
 type Query {
     voter(id: Int!): Voter
     voters: [Voter!]!
     voterAgeBucketsByState(state: String!): [VoterAgeBucket!]!
+    voterFilterOptions: VoterFilterOptions!
+    votersPaginated(
+        page: Int
+        limit: Int
+        search: String
+        assembly_constituency: String
+        parliamentary_constituency: String
+    ): PaginatedVoters!
 }
