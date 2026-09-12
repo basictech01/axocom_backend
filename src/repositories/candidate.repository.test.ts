@@ -30,14 +30,14 @@ async function tearDownDatabase() {
 
 async function resetCandidateTable() {
     const connection = await mockPool.getConnection();
-    await connection.query(`DELETE FROM ${CANDIDATE_TABLE}`);
+    await connection.query(`TRUNCATE TABLE ${CANDIDATE_TABLE}`);
     await connection.query(`
     INSERT INTO candidates (
       name, so_do_wo, age, assembly_constituency, party, name_enrolled_as_voter_in
     ) VALUES
-    (1001, 'Candidate One', 'S/O Parent', 45, 'Mumbai North', 'BJP', 'Mumbai North'),
-    (1002, 'Candidate Two', 'D/O Parent', 38, 'Mumbai South', 'INC', 'Mumbai South'),
-    (1003, 'Candidate Three', 'S/O Parent', 52, 'Pune East', 'AAP', 'Pune East')
+    ('Candidate One', 'S/O Parent', 45, 'Mumbai North', 'BJP', 'Mumbai North'),
+    ('Candidate Two', 'D/O Parent', 38, 'Mumbai South', 'INC', 'Mumbai South'),
+    ('Candidate Three', 'S/O Parent', 52, 'Pune East', 'AAP', 'Pune East')
   `);
     await connection.release();
 }
@@ -116,7 +116,7 @@ describe('CandidateRepository', () => {
 
     it('getAllCandidates when table is empty; should return Result with empty array', async () => {
         const connection = await mockPool.getConnection();
-        await connection.query(`DELETE FROM ${CANDIDATE_TABLE}`);
+        await connection.query(`TRUNCATE TABLE ${CANDIDATE_TABLE}`);
         await connection.release();
 
         const result = await candidateRepository.getAllCandidates();

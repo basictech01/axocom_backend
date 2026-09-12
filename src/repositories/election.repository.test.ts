@@ -1,6 +1,7 @@
 import mysql from 'mysql2/promise';
 import { GenericContainer } from 'testcontainers';
 import { ELECTION_TABLE, CREATE_ELECTION_TABLE } from '../models/election.model';
+import { CONSTITUENCY_TABLE, CREATE_CONSTITUENCY_TABLE } from '../models/constituency.model';
 import { electionRepository } from './election.repository';
 import { ERRORS } from '../utils/error';
 import { jest, describe, it, expect, beforeAll, afterAll } from '@jest/globals';
@@ -18,6 +19,7 @@ jest.mock('../dataconfig/db', () => ({
 
 async function setupDatabase() {
     const connection = await mockPool.getConnection();
+    await connection.query(CREATE_CONSTITUENCY_TABLE);
     await connection.query(CREATE_ELECTION_TABLE);
     await connection.release();
 }
@@ -25,17 +27,27 @@ async function setupDatabase() {
 async function tearDownDatabase() {
     const connection = await mockPool.getConnection();
     await connection.query(`DROP TABLE IF EXISTS ${ELECTION_TABLE}`);
+    await connection.query(`DROP TABLE IF EXISTS ${CONSTITUENCY_TABLE}`);
     await connection.release();
 }
 
 async function resetElectionTable() {
     const connection = await mockPool.getConnection();
-    await connection.query(`DELETE FROM ${ELECTION_TABLE}`);
+    await connection.query(`TRUNCATE TABLE ${ELECTION_TABLE}`);
+    await connection.query(`DELETE FROM ${CONSTITUENCY_TABLE}`);
+    await connection.query(`ALTER TABLE ${CONSTITUENCY_TABLE} AUTO_INCREMENT = 1`);
     await connection.query(`
-    INSERT INTO election (name, start_date, end_date, year, type) VALUES
-    ('Lok Sabha 2024', '2024-04-19 00:00:00', '2024-06-01 00:00:00', 2024, 'General'),
-    ('State Assembly 2023', '2023-10-15 00:00:00', '2023-11-30 00:00:00', 2023, 'State'),
-    ('By-election Mumbai North', '2024-01-10 00:00:00', '2024-01-15 00:00:00', 2024, 'By-election')
+    INSERT INTO constituency (name, state, ac_number) VALUES
+    ('Almora', 'Uttarakhand', 1)
+  `);
+    await connection.query(`
+    INSERT INTO election (
+      name, start_date, end_date, year, constituency_id, type,
+      total_voters, male_voters, female_voters, number_of_polling_stations
+    ) VALUES
+    ('Lok Sabha 2024', '2024-04-19 00:00:00', '2024-06-01 00:00:00', 2024, 1, 'General', 1000, 500, 500, 10),
+    ('State Assembly 2023', '2023-10-15 00:00:00', '2023-11-30 00:00:00', 2023, 1, 'State', 1000, 500, 500, 10),
+    ('By-election Mumbai North', '2024-01-10 00:00:00', '2024-01-15 00:00:00', 2024, 1, 'By-election', 1000, 500, 500, 10)
   `);
     await connection.release();
 }
@@ -116,7 +128,7 @@ describe('ElectionRepository', () => {
 
     it('getAll when table is empty; should return Result with empty array', async () => {
         const connection = await mockPool.getConnection();
-        await connection.query(`DELETE FROM ${ELECTION_TABLE}`);
+        await connection.query(`TRUNCATE TABLE ${ELECTION_TABLE}`);
         await connection.release();
 
         const result = await electionRepository.getAll();

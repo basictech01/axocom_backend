@@ -30,11 +30,11 @@ async function tearDownDatabase() {
 
 async function resetUserTable() {
     const connection = await mockPool.getConnection();
-    await connection.query(`DELETE FROM ${USER_TABLE}`);
+    await connection.query(`TRUNCATE TABLE ${USER_TABLE}`);
     await connection.query(`
-    INSERT INTO users (email, password_hash, name) VALUES
-    ('alice@example.com', '$2b$10$hash1', 'Alice'),
-    ('bob@example.com', '$2b$10$hash2', 'Bob')
+    INSERT INTO users (email, password_hash, name, default_assembly_constituency) VALUES
+    ('alice@example.com', '$2b$10$hash1', 'Alice', 'Almora'),
+    ('bob@example.com', '$2b$10$hash2', 'Bob', 'Almora')
   `);
     await connection.release();
 }
