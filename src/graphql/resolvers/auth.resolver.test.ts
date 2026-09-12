@@ -1,5 +1,6 @@
 import { authResolvers } from './auth.resolver';
 import { userRepository } from '../../repositories/user.repository';
+import { constituencyRepository } from '../../repositories/constituency.repository';
 import { ok, err } from 'neverthrow';
 import { GraphQLError } from 'graphql';
 import { ERRORS } from '../../utils/error';
@@ -12,6 +13,9 @@ import bcrypt from 'bcrypt';
 // Mock the repository
 jest.mock('../../repositories/user.repository');
 const mockRepository = userRepository as jest.Mocked<typeof userRepository>;
+
+jest.mock('../../repositories/constituency.repository');
+const mockConstituencyRepository = constituencyRepository as jest.Mocked<typeof constituencyRepository>;
 
 // Mock bcrypt
 jest.mock('bcrypt');
@@ -37,6 +41,8 @@ describe('AuthResolvers', () => {
         email: 'test@example.com',
         password_hash: '$2b$10$hashedpassword',
         name: 'Test User',
+        is_admin: false,
+        default_assembly_constituency: 'Almora',
         created_at: new Date(),
         updated_at: new Date(),
     } as User;
@@ -51,11 +57,19 @@ describe('AuthResolvers', () => {
     const mockContext: GraphQLContext = {
         req: {} as any,
         user: mockTokenData,
+        loaders: {} as GraphQLContext['loaders'],
     };
 
     beforeEach(() => {
         jest.clearAllMocks();
         mockRequireAuth.mockReturnValue(mockTokenData);
+        mockConstituencyRepository.getByName.mockResolvedValue(ok({
+            id: 1,
+            name: 'Almora',
+            state: 'Uttarakhand',
+            ac_number: 52,
+            created_at: new Date(),
+        } as any));
     });
 
     describe('Query.me', () => {
@@ -68,7 +82,9 @@ describe('AuthResolvers', () => {
                 id: 1,
                 email: 'test@example.com',
                 name: 'Test User',
+                default_assembly_constituency: 'Almora',
                 created_at: mockUser.created_at,
+                updated_at: mockUser.updated_at,
             });
             expect(mockRequireAuth).toHaveBeenCalledWith(mockContext);
             expect(mockRepository.getById).toHaveBeenCalledWith(1);
@@ -86,6 +102,7 @@ describe('AuthResolvers', () => {
             const unauthenticatedContext: GraphQLContext = {
                 req: {} as any,
                 user: null,
+                loaders: {} as GraphQLContext['loaders'],
             };
 
             mockRequireAuth.mockImplementation(() => {
@@ -110,35 +127,39 @@ describe('AuthResolvers', () => {
                     email: 'new@example.com',
                     password: 'password123',
                     name: 'New User',
+                    default_assembly_constituency: 'Almora',
                 },
             });
 
-            expect(result.token).toBe('auth_token_1');
+            expect(result.access_token).toBe('auth_token_1');
             expect(result.refresh_token).toBe('refresh_token_1');
             expect(result.user).toEqual({
                 id: 1,
                 email: 'test@example.com',
                 name: 'Test User',
+                default_assembly_constituency: 'Almora',
                 created_at: mockUser.created_at,
+                updated_at: mockUser.updated_at,
             });
             expect(mockBcrypt.hash).toHaveBeenCalledWith('password123', 12);
             expect(mockRepository.create).toHaveBeenCalledWith({
                 email: 'new@example.com',
                 password_hash: '$2b$10$hashedpassword',
                 name: 'New User',
+                default_assembly_constituency: 'Almora',
             });
         });
 
         it('should throw GraphQLError when email or password missing', async () => {
             await expect(
                 authResolvers.Mutation.signup(null, {
-                    input: { email: '', password: '', name: null },
+                    input: { email: '', password: '', name: '', default_assembly_constituency: '' },
                 })
             ).rejects.toThrow(GraphQLError);
 
             await expect(
                 authResolvers.Mutation.signup(null, {
-                    input: { email: 'test@example.com', password: '', name: null },
+                    input: { email: 'test@example.com', password: '', name: '', default_assembly_constituency: 'Almora' },
                 })
             ).rejects.toThrow(GraphQLError);
         });
@@ -146,7 +167,7 @@ describe('AuthResolvers', () => {
         it('should throw GraphQLError when password too short', async () => {
             await expect(
                 authResolvers.Mutation.signup(null, {
-                    input: { email: 'test@example.com', password: 'short', name: null },
+                    input: { email: 'test@example.com', password: 'short', name: 'Test', default_assembly_constituency: 'Almora' },
                 })
             ).rejects.toThrow(GraphQLError);
         });
@@ -163,6 +184,7 @@ describe('AuthResolvers', () => {
                         email: 'existing@example.com',
                         password: 'password123',
                         name: 'Existing',
+                        default_assembly_constituency: 'Almora',
                     },
                 })
             ).rejects.toThrow(GraphQLError);
@@ -181,13 +203,15 @@ describe('AuthResolvers', () => {
                 },
             });
 
-            expect(result.token).toBe('auth_token_1');
+            expect(result.access_token).toBe('auth_token_1');
             expect(result.refresh_token).toBe('refresh_token_1');
             expect(result.user).toEqual({
                 id: 1,
                 email: 'test@example.com',
                 name: 'Test User',
+                default_assembly_constituency: 'Almora',
                 created_at: mockUser.created_at,
+                updated_at: mockUser.updated_at,
             });
             expect(mockRepository.findByEmail).toHaveBeenCalledWith('test@example.com');
             expect(mockBcrypt.compare).toHaveBeenCalledWith('password123', mockUser.password_hash);

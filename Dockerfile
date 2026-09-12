@@ -1,19 +1,17 @@
-# Use LTS Node
-FROM node:22
-
+FROM node:22-alpine AS build
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY tsconfig.json ./
+COPY src ./src
+RUN npm run build
 
-# Copy package.json only (not package-lock.json)
-COPY package.json ./
-
-# Clean install dependencies for the current platform (Linux)
-RUN npm install
-
-# Copy the rest of your source code
-COPY . .
-
-# Expose your app port
+FROM node:22-alpine AS runtime
+ENV NODE_ENV=production
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+COPY --from=build /app/dist ./dist
+COPY src/graphql/schema ./src/graphql/schema
 EXPOSE 3000
-
-# Use npm run dev for development with tsx
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]

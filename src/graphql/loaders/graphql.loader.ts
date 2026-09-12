@@ -16,6 +16,7 @@ import { solutionResolvers } from "../resolvers/solution.resolver";
 import { summitResolvers } from "../resolvers/summit.resolver";
 import { refundRequestResolvers } from "../resolvers/refund_request.resolver";
 import { paymentResolvers } from "../resolvers/payment.resolver";
+import { certificateParticipantResolvers } from "../resolvers/certificate_participant.resolver";
 
 const schemaPath = join(process.cwd(), "src/graphql/schema");
 
@@ -42,6 +43,7 @@ export function buildGraphQL() {
         summitResolvers,
         refundRequestResolvers,
         paymentResolvers,
+        certificateParticipantResolvers,
     ]);
 
     return { typeDefs, resolvers };

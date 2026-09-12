@@ -273,7 +273,7 @@ describe("DelegatePassRepository", () => {
      * A refunded row has money recorded against it. Letting it back through any
      * payment path would flip a refund to paid and corrupt the record.
      */
-    it.each(["paid", "refunded"])("refuses to open an order for a %s registration", async (status) => {
+    it.each(["paid", "refunded"])("refuses to open an order for a %s registration", async (_status) => {
         mockExecute.mockResolvedValue([{ affectedRows: 0 }, []]);
 
         const result = await delegatePassRepository.attachRazorpayOrder("dlg_1", "order_NEW");

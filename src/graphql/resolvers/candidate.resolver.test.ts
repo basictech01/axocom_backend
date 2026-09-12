@@ -30,6 +30,7 @@ describe('CandidateResolvers', () => {
     const mockContext: GraphQLContext = {
         req: {} as any,
         user: mockUser,
+        loaders: {} as GraphQLContext['loaders'],
     };
 
     beforeEach(() => {
@@ -65,7 +66,7 @@ describe('CandidateResolvers', () => {
                 contracts: null,
                 social_profiles: null,
                 created_at: new Date(),
-            } as Candidate;
+            } as unknown as Candidate;
 
             mockRepository.getById.mockResolvedValue(ok(mockCandidate));
 
@@ -80,6 +81,7 @@ describe('CandidateResolvers', () => {
             const unauthenticatedContext: GraphQLContext = {
                 req: {} as any,
                 user: null,
+                loaders: {} as GraphQLContext['loaders'],
             };
 
             mockRequireAuth.mockImplementation(() => {
@@ -137,12 +139,12 @@ describe('CandidateResolvers', () => {
                     contracts: null,
                     social_profiles: null,
                     created_at: new Date(),
-                } as Candidate,
+                } as unknown as Candidate,
             ];
 
             mockRepository.getAllCandidates.mockResolvedValue(ok(mockCandidates));
 
-            const result = await candidateResolvers.Query.candidates();
+            const result = await candidateResolvers.Query.candidates(null, null);
 
             expect(result).toEqual(mockCandidates);
             expect(mockRepository.getAllCandidates).toHaveBeenCalled();
@@ -151,7 +153,7 @@ describe('CandidateResolvers', () => {
         it('should return empty array when no candidates', async () => {
             mockRepository.getAllCandidates.mockResolvedValue(ok([]));
 
-            const result = await candidateResolvers.Query.candidates();
+            const result = await candidateResolvers.Query.candidates(null, null);
 
             expect(result).toEqual([]);
         });
@@ -160,7 +162,7 @@ describe('CandidateResolvers', () => {
             mockRepository.getAllCandidates.mockResolvedValue(err(ERRORS.DATABASE_ERROR));
 
             try {
-                await candidateResolvers.Query.candidates();
+                await candidateResolvers.Query.candidates(null, null);
                 fail('Should have thrown');
             } catch (error) {
                 expect(error).toBeInstanceOf(GraphQLError);

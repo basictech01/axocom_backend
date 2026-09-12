@@ -1,5 +1,4 @@
-import { err, ok, type Result } from "neverthrow";
-import type { RequestError } from "../../utils/error";
+import { err, ok } from "neverthrow";
 import type { GraphQLContext } from "../context";
 import { toGraphQLError } from "../context";
 import { delegatePassRepository } from "../../repositories/delegate_pass.repository";

@@ -1,7 +1,6 @@
 import mysql from 'mysql2/promise';
 import { GenericContainer } from 'testcontainers';
 import { PARTY_TABLE, CREATE_PARTY_TABLE } from '../models/party.model';
-import { db } from '../dataconfig/db';
 import { partyRepository } from './party.repository';
 import { ERRORS } from '../utils/error';
 import { jest, describe, it, expect, beforeAll, afterAll } from '@jest/globals';

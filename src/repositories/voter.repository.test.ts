@@ -1,7 +1,6 @@
 import mysql from 'mysql2/promise';
 import { GenericContainer } from 'testcontainers';
 import { VOTER_TABLE, CREATE_VOTER_TABLE } from '../models/voter.model';
-import { db } from '../dataconfig/db';
 import { voterRepository } from './voter.repository';
 import { ERRORS } from '../utils/error';
 import { jest, describe, it, expect, beforeAll, afterAll } from '@jest/globals';

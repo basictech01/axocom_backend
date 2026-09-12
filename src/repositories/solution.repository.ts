@@ -78,6 +78,20 @@ class SolutionRepository {
         }
     }
 
+    /** Find the authoritative hackathon registration used for certificate eligibility. */
+    async findByEmail(email: string): Promise<Result<SolutionSubmissionRow | null, RequestError>> {
+        try {
+            const [rows] = await db.execute<SolutionSubmissionRow[]>(
+                `SELECT * FROM ${SOLUTION_SUBMISSIONS_TABLE} WHERE normalized_email = ? LIMIT 1`,
+                [normalizeEmail(email)]
+            );
+            return ok(rows[0] ?? null);
+        } catch (error) {
+            logger.error("Error finding solution registration by email:", error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
+
     async listPublic(options: {
         problemCode?: string | null;
         page?: number;

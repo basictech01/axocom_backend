@@ -1,7 +1,6 @@
 import mysql from 'mysql2/promise';
 import { GenericContainer } from 'testcontainers';
 import { USER_TABLE, CREATE_USER_TABLE } from '../models/user.model';
-import { db } from '../dataconfig/db';
 import { userRepository } from './user.repository';
 import { ERRORS } from '../utils/error';
 import { jest, describe, it, expect, beforeAll, afterAll } from '@jest/globals';
@@ -127,6 +126,7 @@ describe('UserRepository', () => {
             email: 'new@example.com',
             password_hash: '$2b$10$newhash',
             name: 'New User',
+            default_assembly_constituency: 'Almora',
         });
 
         expect(result.isOk()).toBe(true);
@@ -151,6 +151,7 @@ describe('UserRepository', () => {
             email: 'alice@example.com',
             password_hash: '$2b$10$duplicate',
             name: 'Duplicate',
+            default_assembly_constituency: 'Almora',
         });
 
         expect(result.isErr()).toBe(true);

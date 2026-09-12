@@ -4,7 +4,6 @@ node_modules/
 # TypeScript build output
 dist/
 database/
-src/config/env.ts
 build/
 *.js
 *.js.map

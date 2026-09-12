@@ -12,7 +12,6 @@ const GET_CANDIDATE = `
   query GetCandidate($id: Int!) {
     candidate(id: $id) {
       id
-      neta_id
       name
       so_do_wo
       age
@@ -21,17 +20,9 @@ const GET_CANDIDATE = `
       name_enrolled_as_voter_in
       education_category
       university_name
-      pan_itr
-      details_of_criminal_cases
-      details_of_movable_assets
-      details_of_immovable_assets
-      details_of_liabilities
       source_of_income
       contracts
       social_profiles
-      criminal_cases
-      assets
-      liabilities
       created_at
     }
   }
@@ -41,17 +32,13 @@ const GET_CANDIDATES = `
   query GetCandidates {
     candidates {
       id
-      neta_id
       name
       age
       assembly_constituency
       self_profession
       spouse_profession
-      assets
-      liabilities
       education_category
       university_name
-      pan_itr
       party
     }
   }
@@ -111,7 +98,7 @@ describe('Candidate integration(schema + resolvers)', () => {
                 contracts: null as any,
                 social_profiles: null as any,
                 created_at: new Date('2025-01-01T10:00:00Z'),
-            } as Candidate;
+            } as unknown as Candidate;
 
             jest.spyOn(candidateRepository, 'getById').mockResolvedValue(ok(mockCandidate));
 
@@ -128,7 +115,6 @@ describe('Candidate integration(schema + resolvers)', () => {
                 expect(data?.candidate).toBeDefined();
                 expect(data?.candidate).toMatchObject({
                     id: 1,
-                    neta_id: 1001,
                     name: 'Candidate One',
                     assembly_constituency: 'Mumbai North',
                     party: 'BJP',
@@ -185,7 +171,6 @@ describe('Candidate integration(schema + resolvers)', () => {
             const mockCandidates: Candidate[] = [
                 {
                     id: 1,
-                    neta_id: 1001,
                     name: 'Candidate One',
                     so_do_wo: 'S/O Parent',
                     age: 45,
@@ -209,10 +194,9 @@ describe('Candidate integration(schema + resolvers)', () => {
                     contracts: null as any,
                     social_profiles: null as any,
                     created_at: new Date(),
-                } as Candidate,
+                } as unknown as Candidate,
                 {
                     id: 2,
-                    neta_id: 1002,
                     name: 'Candidate Two',
                     so_do_wo: 'D/O Parent',
                     age: 38,
@@ -236,7 +220,7 @@ describe('Candidate integration(schema + resolvers)', () => {
                     contracts: null as any,
                     social_profiles: null as any,
                     created_at: new Date(),
-                } as Candidate,
+                } as unknown as Candidate,
             ];
 
             jest
@@ -256,12 +240,10 @@ describe('Candidate integration(schema + resolvers)', () => {
                 expect(data?.candidates).toHaveLength(2);
                 expect(data?.candidates[0]).toMatchObject({
                     id: 1,
-                    neta_id: 1001,
                     name: 'Candidate One',
                 });
                 expect(data?.candidates[1]).toMatchObject({
                     id: 2,
-                    neta_id: 1002,
                     name: 'Candidate Two',
                 });
             }

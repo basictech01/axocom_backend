@@ -81,7 +81,7 @@ export function decodeRefreshToken(token: string): TokenData {
         }
 
         return decoded as TokenData;
-    } catch (error) {
+    } catch {
         throw ERRORS.INVALID_REFRESH_TOKEN;
     }
 }
