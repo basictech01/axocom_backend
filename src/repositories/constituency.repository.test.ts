@@ -1,7 +1,6 @@
 import mysql from 'mysql2/promise';
 import { GenericContainer } from 'testcontainers';
 import { CONSTITUENCY_TABLE, CREATE_CONSTITUENCY_TABLE } from '../models/constituency.model';
-import { db } from '../dataconfig/db';
 import { constituencyRepository } from './constituency.repository';
 import { ERRORS } from '../utils/error';
 import { jest, describe, it, expect, beforeAll, afterAll } from '@jest/globals';

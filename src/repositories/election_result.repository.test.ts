@@ -1,7 +1,6 @@
 import mysql from 'mysql2/promise';
 import { GenericContainer } from 'testcontainers';
 import { ELECTION_RESULT_TABLE } from '../models/election_result.model';
-import { db } from '../dataconfig/db';
 import { electionResultRepository } from './election_result.repository';
 import { ERRORS } from '../utils/error';
 import { jest, describe, it, expect, beforeAll, afterAll } from '@jest/globals';
@@ -141,4 +140,4 @@ describe('ElectionResultRepository', () => {
 
         await resetElectionResultTable();
     });
-}); 
+});

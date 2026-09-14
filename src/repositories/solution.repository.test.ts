@@ -85,6 +85,25 @@ describe("SolutionRepository", () => {
         if (result.isErr()) expect(result.error).toBe(ERRORS.DUPLICATE_SUBMISSION);
     });
 
+    it("finds a certificate-eligible registration by normalized email", async () => {
+        const row = {
+            id: "sub_1",
+            full_name: "Asha Rawat",
+            normalized_email: "asha@example.com",
+            normalized_phone: "9876543210",
+        };
+        mockExecute.mockResolvedValue([[row], []]);
+
+        const result = await solutionRepository.findByEmail(" ASHA@Example.COM ");
+
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) expect(result.value).toEqual(row);
+        expect(mockExecute).toHaveBeenCalledWith(
+            expect.stringContaining("WHERE normalized_email = ?"),
+            ["asha@example.com"]
+        );
+    });
+
     it("lists accepted solutions with filters and pagination metadata", async () => {
         const row = {
             id: "sub_1",

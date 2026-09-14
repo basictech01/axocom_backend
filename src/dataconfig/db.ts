@@ -12,7 +12,9 @@ export const db = mysql.createPool({
     port: Number(DB_PORT),
     waitForConnections: true,
     connectionLimit: 50,
-    maxIdle: 10,
+    // mysql2 runs a repeating idle-reaper timer whenever maxIdle is below the
+    // connection limit. Avoid leaving that timer open in isolated unit tests.
+    maxIdle: NODE_ENV === "test" ? 50 : 10,
     idleTimeout: 60000,
     queueLimit: 0,
     enableKeepAlive: true,

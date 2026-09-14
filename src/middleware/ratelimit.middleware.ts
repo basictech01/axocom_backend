@@ -11,3 +11,31 @@ export const limiter = rateLimit({
         }
     }
 });
+
+const CERTIFICATE_OPERATIONS = [
+    "certificateByEmail",
+    "certificateLookupByEmail",
+    "certificateByHash",
+    "registerCertificateParticipant",
+];
+
+/** A tighter public limit for certificate registration and lookup only. */
+export const certificateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => {
+        const operationName = typeof req.body?.operationName === "string" ? req.body.operationName : "";
+        const query = typeof req.body?.query === "string" ? req.body.query : "";
+        return !CERTIFICATE_OPERATIONS.some(
+            (operation) => operationName === operation || query.includes(operation),
+        );
+    },
+    message: {
+        errors: [{
+            message: "Too many certificate requests. Please try again later.",
+            extensions: { code: "RATE_LIMITED", statusCode: 429 },
+        }],
+    },
+});

@@ -23,13 +23,3 @@ export function createContext(overrides: { user?: TokenData | null; req?: any } 
     const { user = { id: 1, is_admin: false, email: 'test@example.com' }, req = {} } = overrides;
     return { req, user, loaders: createLoaders() } as GraphQLContext;
 }
-
-// Clean up console warnings during tests
-global.console = {
-    ...console,
-    error: jest.fn(),
-    warn: jest.fn(),
-};
-
-// Set default test timeout
-jest.setTimeout(10000);

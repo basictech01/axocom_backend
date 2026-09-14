@@ -1,7 +1,6 @@
 import mysql from 'mysql2/promise';
 import { GenericContainer } from 'testcontainers';
 import { USER_TABLE, CREATE_USER_TABLE } from '../models/user.model';
-import { db } from '../dataconfig/db';
 import { userRepository } from './user.repository';
 import { ERRORS } from '../utils/error';
 import { jest, describe, it, expect, beforeAll, afterAll } from '@jest/globals';
@@ -31,11 +30,11 @@ async function tearDownDatabase() {
 
 async function resetUserTable() {
     const connection = await mockPool.getConnection();
-    await connection.query(`DELETE FROM ${USER_TABLE}`);
+    await connection.query(`TRUNCATE TABLE ${USER_TABLE}`);
     await connection.query(`
-    INSERT INTO users (email, password_hash, name) VALUES
-    ('alice@example.com', '$2b$10$hash1', 'Alice'),
-    ('bob@example.com', '$2b$10$hash2', 'Bob')
+    INSERT INTO users (email, password_hash, name, default_assembly_constituency) VALUES
+    ('alice@example.com', '$2b$10$hash1', 'Alice', 'Almora'),
+    ('bob@example.com', '$2b$10$hash2', 'Bob', 'Almora')
   `);
     await connection.release();
 }
@@ -127,6 +126,7 @@ describe('UserRepository', () => {
             email: 'new@example.com',
             password_hash: '$2b$10$newhash',
             name: 'New User',
+            default_assembly_constituency: 'Almora',
         });
 
         expect(result.isOk()).toBe(true);
@@ -151,6 +151,7 @@ describe('UserRepository', () => {
             email: 'alice@example.com',
             password_hash: '$2b$10$duplicate',
             name: 'Duplicate',
+            default_assembly_constituency: 'Almora',
         });
 
         expect(result.isErr()).toBe(true);

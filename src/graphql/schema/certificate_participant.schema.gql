@@ -1,0 +1,33 @@
+input RegisterCertificateParticipantInput {
+    fullName: String!
+    email: String!
+    phone: String!
+    institution: String!
+    course: String
+    city: String!
+}
+
+type CertificateParticipant {
+    id: ID!
+    hash: String!
+    fullName: String!
+    institution: String!
+    course: String
+    city: String!
+    issuedAt: DateTime!
+}
+
+type CertificateLookupResult {
+    registered: Boolean!
+    certificate: CertificateParticipant
+}
+
+type Query {
+    certificateByEmail(email: String!): CertificateParticipant
+    certificateLookupByEmail(email: String!): CertificateLookupResult!
+    certificateByHash(hash: String!): CertificateParticipant
+}
+
+type Mutation {
+    registerCertificateParticipant(input: RegisterCertificateParticipantInput!): CertificateParticipant!
+}
