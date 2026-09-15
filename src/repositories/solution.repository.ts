@@ -9,13 +9,43 @@ import {
     type ReviewStatus,
     type SolutionSubmissionRow,
 } from "../models/solution.model";
+import { MAX_TEAM_MEMBERS, type TeamMemberInput } from "../models/team_member.model";
 import { ERRORS, RequestError, isDuplicateKeyError } from "../utils/error";
 import createLogger from "../utils/logger";
 import { isValidNormalizedPhone, normalizeEmail, normalizePhone } from "../utils/normalize";
+import { insertTeamMembers, isAnyIdentityRegistered } from "./team_member.repository";
 
 const logger = createLogger("@solution.repository");
 
 export type Paginated<T> = { data: T[]; pagination: Pagination };
+
+/**
+ * Normalize teammates and require every person in the entry, lead included, to
+ * have a distinct email and phone. Returns null when the team is invalid.
+ */
+export function normalizeTeamMembers(
+    members: CreateSolutionInput["teamMembers"],
+    lead: { email: string; phone: string }
+): TeamMemberInput[] | null {
+    const list = members ?? [];
+    if (list.length > MAX_TEAM_MEMBERS) return null;
+
+    const emails = new Set([lead.email]);
+    const phones = new Set([lead.phone]);
+    const normalized: TeamMemberInput[] = [];
+    for (const member of list) {
+        const fullName = (member.fullName ?? "").trim().replace(/\s+/g, " ");
+        const email = normalizeEmail(member.email ?? "");
+        const phone = normalizePhone(member.phone);
+        if (fullName.length < 2 || fullName.length > 120) return null;
+        if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || emails.has(email)) return null;
+        if (!isValidNormalizedPhone(phone) || phones.has(phone)) return null;
+        emails.add(email);
+        phones.add(phone);
+        normalized.push({ fullName, email, phone });
+    }
+    return normalized;
+}
 
 function clampPage(page: number, limit: number) {
     const pageNumber = Math.max(1, page || 1);
@@ -50,10 +80,26 @@ class SolutionRepository {
             return err(new RequestError("A valid 10-digit mobile number is required", 10002, 400));
         }
 
+        const teamMembers = normalizeTeamMembers(input.teamMembers, {
+            email: normalizedEmail,
+            phone: normalizedPhone,
+        });
+        if (!teamMembers) return err(ERRORS.INVALID_TEAM);
+
         const submissionId = `sub_${randomBytes(9).toString("base64url")}`;
 
+        const connection = await db.getConnection();
         try {
-            await db.execute(
+            await connection.beginTransaction();
+            // Unique keys on each table stop repeats within that table; this check
+            // stops a person from being a lead in one entry and a teammate in another.
+            const emails = [normalizedEmail, ...teamMembers.map((member) => member.email)];
+            const phones = [normalizedPhone, ...teamMembers.map((member) => member.phone)];
+            if (await isAnyIdentityRegistered(connection, emails, phones)) {
+                await connection.rollback();
+                return err(ERRORS.DUPLICATE_SUBMISSION);
+            }
+            await connection.execute(
                 `INSERT INTO ${SOLUTION_SUBMISSIONS_TABLE}
                 (id, full_name, email, normalized_email, phone, normalized_phone, problem_code, solution_title, solution_description, prototype_url, contact_consent_at, status)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 'pending')`,
@@ -70,11 +116,16 @@ class SolutionRepository {
                     input.prototypeUrl || null,
                 ]
             );
+            await insertTeamMembers(connection, submissionId, teamMembers, "registration");
+            await connection.commit();
             return ok({ submissionId, status: "received" });
         } catch (error) {
+            await connection.rollback().catch(() => undefined);
             if (isDuplicateKeyError(error)) return err(ERRORS.DUPLICATE_SUBMISSION);
             logger.error("Error creating solution submission:", error);
             return err(ERRORS.DATABASE_ERROR);
+        } finally {
+            connection.release();
         }
     }
 
@@ -220,6 +271,19 @@ class SolutionRepository {
             return ok(true);
         } catch (error) {
             logger.error("Error updating solution status:", error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
+
+    async countAcceptedByProblem(): Promise<Result<Array<{ problemCode: string; acceptedSolutions: number }>, RequestError>> {
+        try {
+            const [rows] = await db.execute<Array<{ problem_code: string; total: number } & import("mysql2").RowDataPacket>>(
+                `SELECT problem_code, COUNT(*) AS total FROM ${SOLUTION_SUBMISSIONS_TABLE}
+                 WHERE status = 'accepted' GROUP BY problem_code`
+            );
+            return ok(rows.map((row) => ({ problemCode: row.problem_code, acceptedSolutions: Number(row.total) })));
+        } catch (error) {
+            logger.error("Error counting accepted solutions by problem:", error);
             return err(ERRORS.DATABASE_ERROR);
         }
     }

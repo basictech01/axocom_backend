@@ -11,6 +11,11 @@ type Pagination {
   totalPages: Int!
 }
 
+type ProblemSolutionCount {
+  problemCode: String!
+  acceptedSolutions: Int!
+}
+
 type PublicStats {
   acceptedSolutions: Int!
   acceptedMentors: Int!

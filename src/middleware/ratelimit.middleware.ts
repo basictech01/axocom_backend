@@ -12,17 +12,21 @@ export const limiter = rateLimit({
     }
 });
 
+// certificateByHash is deliberately absent: hashes carry 192 random bits, so
+// opening a shared certificate link cannot be used to guess other certificates,
+// and students on one campus network often share a single public IP.
 const CERTIFICATE_OPERATIONS = [
     "certificateByEmail",
     "certificateLookupByEmail",
-    "certificateByHash",
     "registerCertificateParticipant",
+    "certificateTeamByLead",
+    "addCertificateTeamMember",
 ];
 
 /** A tighter public limit for certificate registration and lookup only. */
 export const certificateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 30,
+    max: 60,
     standardHeaders: true,
     legacyHeaders: false,
     skip: (req) => {

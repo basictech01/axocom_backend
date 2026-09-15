@@ -5,6 +5,9 @@ dotenv.config();
 export const PORT = process.env.PORT ?? "3000";
 export const NODE_ENV = process.env.NODE_ENV ?? "development";
 export const CORS_ORIGIN = process.env.CORS_ORIGIN ?? "http://localhost:5173";
+// Number of reverse proxies in front of the API (e.g. "1" behind one load balancer).
+// Without it, every visitor appears to share the proxy's IP address for rate limiting.
+export const TRUST_PROXY = process.env.TRUST_PROXY
 
 export const DB_HOST = process.env.DB_HOST ?? "localhost";
 export const DB_USER = process.env.DB_USER ?? "root";

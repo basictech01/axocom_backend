@@ -38,6 +38,21 @@ class CertificateParticipantRepository {
         return this.findOne("email_normalized", email);
     }
 
+    async findByEmails(emails: string[]): Promise<Result<CertificateParticipantRow[], RequestError>> {
+        if (emails.length === 0) return ok([]);
+        try {
+            const [rows] = await db.execute<CertificateParticipantRow[]>(
+                `SELECT * FROM ${CERTIFICATE_PARTICIPANT_TABLE}
+                 WHERE email_normalized IN (${emails.map(() => "?").join(",")})`,
+                emails,
+            );
+            return ok(rows);
+        } catch (error) {
+            logger.error("Error finding certificate participants by email", error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
+
     async findByHash(hash: string): Promise<Result<CertificateParticipantRow | null, RequestError>> {
         return this.findOne("hash", hash);
     }

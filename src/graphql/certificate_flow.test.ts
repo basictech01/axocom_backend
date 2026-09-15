@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from "@je
 import { ok } from "neverthrow";
 import { certificateParticipantRepository } from "../repositories/certificate_participant.repository";
 import { solutionRepository } from "../repositories/solution.repository";
+import { teamMemberRepository } from "../repositories/team_member.repository";
 import { buildGraphQL } from "./loaders/graphql.loader";
 
 const registration = {
@@ -35,6 +36,7 @@ describe("certificate GraphQL flow", () => {
     it("returns an explicit unregistered result after checking both stores", async () => {
         jest.spyOn(certificateParticipantRepository, "findByEmail").mockResolvedValue(ok(null));
         const findRegistration = jest.spyOn(solutionRepository, "findByEmail").mockResolvedValue(ok(null));
+        const findTeammate = jest.spyOn(teamMemberRepository, "findByEmail").mockResolvedValue(ok(null));
 
         const response = await server.executeOperation({
             query: `query CertificateLookupByEmail($email: String!) {
@@ -50,6 +52,7 @@ describe("certificate GraphQL flow", () => {
             certificateLookupByEmail: { registered: false, certificate: null },
         });
         expect(findRegistration).toHaveBeenCalledWith("missing@example.com");
+        expect(findTeammate).toHaveBeenCalledWith("missing@example.com");
     });
 
     it("recognizes a hackathon registration even before certificate generation", async () => {
