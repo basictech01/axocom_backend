@@ -72,6 +72,8 @@ export type CreateSolutionInput = {
     solutionTitle: string;
     solutionDescription: string;
     prototypeUrl?: string | null;
+    /** Teammates other than the person submitting. Omitted or empty for solo entries. */
+    teamMembers?: Array<{ fullName: string; email: string; phone: string }> | null;
     contactConsent: boolean;
 };
 

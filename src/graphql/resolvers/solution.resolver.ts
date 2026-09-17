@@ -3,6 +3,23 @@ import { requireAdmin, toGraphQLError } from "../context";
 import { mentorRepository } from "../../repositories/mentor.repository";
 import { solutionRepository } from "../../repositories/solution.repository";
 import type { ReviewStatus } from "../../models/solution.model";
+import { createTtlCache } from "../../utils/ttl-cache";
+
+/**
+ * Public pages are read far more often than admins review entries, and the
+ * results only change on review. A short shared cache keeps traffic spikes off
+ * the database; reviews clear it so accepted entries appear straight away.
+ */
+const PUBLIC_CACHE_TTL_MS = 30_000;
+const publicCache = createTtlCache<unknown>(PUBLIC_CACHE_TTL_MS);
+
+export function clearPublicSolutionCache() {
+    publicCache.clear();
+}
+
+async function cachedPublic<T>(key: string, load: () => Promise<T>): Promise<T> {
+    return publicCache.get(key, load) as Promise<T>;
+}
 
 function mapPublicSolution(row: Record<string, unknown>) {
     return {
@@ -31,25 +48,41 @@ function mapAdminSolution(row: Record<string, unknown>) {
 }
 
 export const solutionResolvers = {
+    SolutionSubmission: {
+        teamMembers: async (parent: { id: string }, _: unknown, context: GraphQLContext) => {
+            const rows = await context.loaders.teamMembersBySubmissionId.load(parent.id);
+            return rows.map((row) => ({ fullName: row.full_name, email: row.email, phone: row.phone }));
+        },
+    },
+
     Query: {
-        publicSolutions: async (_: unknown, args: { problemCode?: string; page?: number; limit?: number }) => {
-            const result = await solutionRepository.listPublic(args);
-            if (result.isErr()) throw toGraphQLError(result.error);
-            return {
-                data: result.value.data.map((row) => mapPublicSolution(row as unknown as Record<string, unknown>)),
-                pagination: result.value.pagination,
-            };
-        },
+        publicSolutions: (_: unknown, args: { problemCode?: string; page?: number; limit?: number }) =>
+            cachedPublic(`solutions:${args.problemCode ?? ""}:${args.page ?? 1}:${args.limit ?? 50}`, async () => {
+                const result = await solutionRepository.listPublic(args);
+                if (result.isErr()) throw toGraphQLError(result.error);
+                return {
+                    data: result.value.data.map((row) => mapPublicSolution(row as unknown as Record<string, unknown>)),
+                    pagination: result.value.pagination,
+                };
+            }),
 
-        publicStats: async () => {
-            const solutions = await solutionRepository.countAccepted();
-            if (solutions.isErr()) throw toGraphQLError(solutions.error);
+        publicSolutionCounts: () =>
+            cachedPublic("solution-counts", async () => {
+                const result = await solutionRepository.countAcceptedByProblem();
+                if (result.isErr()) throw toGraphQLError(result.error);
+                return result.value;
+            }),
 
-            const mentors = await mentorRepository.countAccepted();
-            if (mentors.isErr()) throw toGraphQLError(mentors.error);
+        publicStats: () =>
+            cachedPublic("stats", async () => {
+                const solutions = await solutionRepository.countAccepted();
+                if (solutions.isErr()) throw toGraphQLError(solutions.error);
 
-            return { acceptedSolutions: solutions.value, acceptedMentors: mentors.value };
-        },
+                const mentors = await mentorRepository.countAccepted();
+                if (mentors.isErr()) throw toGraphQLError(mentors.error);
+
+                return { acceptedSolutions: solutions.value, acceptedMentors: mentors.value };
+            }),
 
         adminSolutionSubmissions: async (
             _: unknown,
@@ -92,6 +125,7 @@ export const solutionResolvers = {
                 admin.id
             );
             if (result.isErr()) throw toGraphQLError(result.error);
+            clearPublicSolutionCache();
             return true;
         },
     },

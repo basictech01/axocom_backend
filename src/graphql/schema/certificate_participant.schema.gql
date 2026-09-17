@@ -22,12 +22,49 @@ type CertificateLookupResult {
     certificate: CertificateParticipant
 }
 
+type CertificateTeamMember {
+    id: ID!
+    fullName: String!
+    "Masked email so the lead can tell teammates apart without exposing contact details."
+    emailHint: String!
+    certificate: CertificateParticipant
+}
+
+type CertificateTeam {
+    solutionTitle: String!
+    problemCode: String!
+    leadName: String!
+    leadCertificate: CertificateParticipant
+    members: [CertificateTeamMember!]!
+    maxMembers: Int!
+}
+
+input CertificateTeamLeadInput {
+    leadEmail: String!
+    leadPhone: String!
+}
+
+input AddCertificateTeamMemberInput {
+    leadEmail: String!
+    leadPhone: String!
+    fullName: String!
+    email: String!
+    phone: String!
+    institution: String!
+    course: String
+    city: String!
+}
+
 type Query {
     certificateByEmail(email: String!): CertificateParticipant
     certificateLookupByEmail(email: String!): CertificateLookupResult!
     certificateByHash(hash: String!): CertificateParticipant
+    "The verified team lead's team, with each teammate's certificate status."
+    certificateTeamByLead(input: CertificateTeamLeadInput!): CertificateTeam!
 }
 
 type Mutation {
     registerCertificateParticipant(input: RegisterCertificateParticipantInput!): CertificateParticipant!
+    "A verified team lead adds a teammate (or completes a registered teammate) and issues their certificate."
+    addCertificateTeamMember(input: AddCertificateTeamMemberInput!): CertificateTeamMember!
 }

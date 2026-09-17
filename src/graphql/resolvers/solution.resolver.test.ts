@@ -5,7 +5,7 @@ import type { GraphQLContext } from "../context";
 import { ERRORS } from "../../utils/error";
 import { mentorRepository } from "../../repositories/mentor.repository";
 import { solutionRepository } from "../../repositories/solution.repository";
-import { solutionResolvers } from "./solution.resolver";
+import { clearPublicSolutionCache, solutionResolvers } from "./solution.resolver";
 
 jest.mock("../../repositories/solution.repository", () => ({
     solutionRepository: {
@@ -13,6 +13,7 @@ jest.mock("../../repositories/solution.repository", () => ({
         listPublic: jest.fn(),
         listAdmin: jest.fn(),
         countAccepted: jest.fn(),
+        countAcceptedByProblem: jest.fn(),
         updateStatus: jest.fn(),
     },
 }));
@@ -36,6 +37,19 @@ function contextFor(user: GraphQLContext["user"], solutionById?: unknown): Graph
 describe("SolutionResolvers", () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        clearPublicSolutionCache();
+    });
+
+    it("counts accepted solutions per problem once for concurrent visitors", async () => {
+        mockSolutionRepository.countAcceptedByProblem.mockResolvedValue(ok([{ problemCode: "P-001", acceptedSolutions: 4 }]));
+
+        const results = await Promise.all([
+            solutionResolvers.Query.publicSolutionCounts(),
+            solutionResolvers.Query.publicSolutionCounts(),
+        ]);
+
+        expect(results).toEqual([[{ problemCode: "P-001", acceptedSolutions: 4 }], [{ problemCode: "P-001", acceptedSolutions: 4 }]]);
+        expect(mockSolutionRepository.countAcceptedByProblem).toHaveBeenCalledTimes(1);
     });
 
     it("maps public repository rows to the pace GraphQL contract", async () => {

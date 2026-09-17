@@ -104,6 +104,10 @@ export const ERRORS = {
     SOLUTION_NOT_FOUND: new RequestError("Solution submission not found", 60003, 404),
     MENTOR_NOT_FOUND: new RequestError("Mentor application not found", 60004, 404),
     INVALID_REVIEW_STATUS: new RequestError("Invalid review status", 60005, 400),
+    INVALID_TEAM: new RequestError("Each team member needs a name, a valid email and a 10-digit mobile number, and a team can have at most 4 people", 60006, 400),
+    TEAM_FULL: new RequestError("This team is full. A team can have at most 4 people", 60007, 409),
+    PARTICIPANT_ALREADY_REGISTERED: new RequestError("This person has already participated, solo or in another team", 60008, 409),
+    TEAM_MEMBER_DETAILS_MISMATCH: new RequestError("These details do not match the teammate's registration", 60009, 403),
 
     // Summit registration errors (7xxxx)
     DELEGATE_PASS_NOT_FOUND: new RequestError("Delegate pass registration not found", 70001, 404),

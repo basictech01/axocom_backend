@@ -4,7 +4,7 @@ import http from "http";
 // import { readFileSync } from 'fs';
 import cookieParser from "cookie-parser";
 // import { join } from 'path';
-import { CORS_ORIGIN, PORT } from './config/env';
+import { CORS_ORIGIN, PORT, TRUST_PROXY } from './config/env';
 import { connectToDatabase } from './dataconfig/db';
 // import { candidateResolvers } from './graphql/resolvers/candidate.resolver';
 import express from 'express';
@@ -50,6 +50,10 @@ async function startServer() {
 
     const app = express();
     const httpServer = http.createServer(app);
+    if (TRUST_PROXY) {
+        // Rate limits are per client IP; behind a proxy that IP comes from X-Forwarded-For.
+        app.set('trust proxy', /^\d+$/.test(TRUST_PROXY) ? Number(TRUST_PROXY) : TRUST_PROXY);
+    }
     app.use(cors({
         origin: CORS_ORIGIN,
         credentials: true

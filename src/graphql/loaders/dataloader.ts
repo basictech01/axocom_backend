@@ -6,6 +6,7 @@ import { ELECTION_CANDIDATE_TABLE, ElectionCandidate } from "../../models/electi
 import { Constituency, CONSTITUENCY_TABLE } from "../../models/constituency.model";
 import { MENTOR_APPLICATIONS_TABLE, MentorApplicationRow } from "../../models/mentor.model";
 import { SOLUTION_SUBMISSIONS_TABLE, SolutionSubmissionRow } from "../../models/solution.model";
+import { TEAM_MEMBERS_TABLE, TeamMemberRow } from "../../models/team_member.model";
 
 // Batch function: given an array of IDs, return rows in the SAME order
 async function batchCandidates(ids: readonly number[]): Promise<(Candidate | null)[]> {
@@ -62,6 +63,14 @@ async function batchMentors(ids: readonly string[]): Promise<(MentorApplicationR
     return ids.map((id) => map.get(id) ?? null);
 }
 
+async function batchTeamMembers(submissionIds: readonly string[]): Promise<TeamMemberRow[][]> {
+    const [rows] = await db.execute<TeamMemberRow[]>(
+        `SELECT * FROM ${TEAM_MEMBERS_TABLE} WHERE submission_id IN (${submissionIds.map(() => "?").join(",")}) ORDER BY id`,
+        [...submissionIds]
+    );
+    return submissionIds.map((id) => rows.filter((row) => row.submission_id === id));
+}
+
 // Factory — creates fresh loaders per request (important for cache isolation)
 export function createLoaders() {
     return {
@@ -71,6 +80,7 @@ export function createLoaders() {
         constituencyLoader: new DataLoader(batchConstituencies),
         solutionById: new DataLoader(batchSolutions),
         mentorById: new DataLoader(batchMentors),
+        teamMembersBySubmissionId: new DataLoader(batchTeamMembers),
     };
 }
 

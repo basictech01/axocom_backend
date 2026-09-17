@@ -16,6 +16,7 @@ services:
       - ./src/dataconfig/002_dump.sql:/docker-entrypoint-initdb.d/002_dump.sql:ro
       - ./src/dataconfig/003_summit_registrations.sql:/docker-entrypoint-initdb.d/003_summit_registrations.sql:ro
       - ./src/dataconfig/004_hackathon_certificates.sql:/docker-entrypoint-initdb.d/004_hackathon_certificates.sql:ro
+      - ./src/dataconfig/005_hackathon_team_members.sql:/docker-entrypoint-initdb.d/005_hackathon_team_members.sql:ro
     tmpfs:
       - /var/run/mysqld
     healthcheck:
