@@ -10,7 +10,7 @@ import { connectToDatabase } from './dataconfig/db';
 import express from 'express';
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import { expressMiddleware } from '@as-integrations/express5';
-import { certificateLimiter, limiter } from './middleware/ratelimit.middleware';
+import { certificateLimiter, limiter, teamLeaderLimiter } from './middleware/ratelimit.middleware';
 import cors from 'cors';
 import { buildGraphQL } from './graphql/loaders/graphql.loader';
 import { notFoundHandler } from './middleware/error.middleware';
@@ -92,6 +92,7 @@ async function startServer() {
     app.use(
         "/graphql",
         certificateLimiter,
+        teamLeaderLimiter,
         express.json(),
         optionalAuth,
         expressMiddleware(apollo, {

@@ -27,6 +27,40 @@ type SolutionSubmission {
   updatedAt: DateTime!
 }
 
+type SolutionStatus {
+  id: ID!
+  problemCode: String!
+  solutionTitle: String!
+  status: ReviewStatus!
+  reviewedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type SolutionTeamMember {
+  id: ID!
+  fullName: String!
+  email: String!
+  phone: String!
+  createdAt: DateTime!
+}
+
+type TeamLeaderDashboard {
+  accessToken: String!
+  id: ID!
+  fullName: String!
+  email: String!
+  phone: String!
+  problemCode: String!
+  solutionTitle: String!
+  solutionDescription: String!
+  prototypeUrl: String
+  status: ReviewStatus!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  members: [SolutionTeamMember!]!
+}
+
 type PublicSolutionConnection {
   data: [PublicSolution!]!
   pagination: Pagination!
@@ -40,6 +74,7 @@ type SolutionSubmissionConnection {
 type SubmitSolutionResult {
   submissionId: ID!
   status: String!
+  accessToken: String!
 }
 
 input SubmitSolutionInput {
@@ -58,9 +93,23 @@ input UpdateReviewStatusInput {
   adminNote: String
 }
 
+input UpdateTeamSolutionInput {
+  solutionTitle: String!
+  solutionDescription: String!
+  prototypeUrl: String
+}
+
+input SolutionTeamMemberInput {
+  fullName: String!
+  email: String!
+  phone: String!
+}
+
 extend type Query {
   publicSolutions(problemCode: String, page: Int = 1, limit: Int = 50): PublicSolutionConnection!
   publicStats: PublicStats!
+  solutionStatus(contact: String!): SolutionStatus
+  teamDashboard(accessToken: String!): TeamLeaderDashboard
   adminSolutionSubmissions(
     status: ReviewStatus
     search: String
@@ -74,4 +123,8 @@ extend type Query {
 extend type Mutation {
   submitSolution(input: SubmitSolutionInput!): SubmitSolutionResult!
   updateSolutionStatus(id: ID!, input: UpdateReviewStatusInput!): Boolean!
+  "Mints a scoped dashboard access token, so this is a mutation rather than a query."
+  openTeamLeaderDashboard(email: String!, phone: String!): TeamLeaderDashboard!
+  updateTeamSolution(accessToken: String!, input: UpdateTeamSolutionInput!): Boolean!
+  addSolutionTeamMember(accessToken: String!, input: SolutionTeamMemberInput!): SolutionTeamMember!
 }

@@ -12,7 +12,7 @@ const {
     NOMINATION_PLANS,
     findDelegatePass,
     findNominationPlan,
-} = require("./pricing");
+} = require("./pricing") as typeof import("./pricing");
 
 /**
  * These are the prices shown on the public pages. They are pinned here because

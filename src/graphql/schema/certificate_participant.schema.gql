@@ -2,18 +2,18 @@ input RegisterCertificateParticipantInput {
     fullName: String!
     email: String!
     phone: String!
-    institution: String!
+    institution: String
     course: String
-    city: String!
+    city: String
 }
 
 type CertificateParticipant {
     id: ID!
     hash: String!
     fullName: String!
-    institution: String!
+    institution: String
     course: String
-    city: String!
+    city: String
     issuedAt: DateTime!
 }
 
@@ -24,10 +24,11 @@ type CertificateLookupResult {
 
 type Query {
     certificateByEmail(email: String!): CertificateParticipant
-    certificateLookupByEmail(email: String!): CertificateLookupResult!
     certificateByHash(hash: String!): CertificateParticipant
 }
 
 type Mutation {
+    "Issues the certificate on first lookup, so this is a mutation rather than a query."
+    certificateLookupByEmail(email: String!): CertificateLookupResult!
     registerCertificateParticipant(input: RegisterCertificateParticipantInput!): CertificateParticipant!
 }

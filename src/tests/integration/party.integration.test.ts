@@ -143,13 +143,14 @@ describe('Party integration(schema + resolvers)', () => {
             if (body.kind === 'single') {
                 const { data, errors } = body.singleResult;
                 expect(errors).toBeUndefined();
-                expect(data?.parties).toHaveLength(2);
-                expect(data?.parties[0]).toMatchObject({
+                const parties = data?.parties as Array<Record<string, unknown>>;
+                expect(parties).toHaveLength(2);
+                expect(parties[0]).toMatchObject({
                     id: 1,
                     name: 'Bharatiya Janata Party',
                     short_name: 'BJP',
                 });
-                expect(data?.parties[1]).toMatchObject({
+                expect(parties[1]).toMatchObject({
                     id: 2,
                     name: 'Indian National Congress',
                     short_name: 'INC',

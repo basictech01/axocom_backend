@@ -6,18 +6,32 @@ import { ERRORS } from "../../utils/error";
 import { mentorRepository } from "../../repositories/mentor.repository";
 import { solutionRepository } from "../../repositories/solution.repository";
 import { solutionResolvers } from "./solution.resolver";
+import { decodeTeamDashboardToken } from "../../utils/jwt";
 
 jest.mock("../../repositories/solution.repository", () => ({
     solutionRepository: {
         create: jest.fn(),
         listPublic: jest.fn(),
         listAdmin: jest.fn(),
+        findStatusByContact: jest.fn(),
+        findTeamDashboard: jest.fn(),
+        updateByTeamLeader: jest.fn(),
+        addTeamMember: jest.fn(),
         countAccepted: jest.fn(),
         updateStatus: jest.fn(),
     },
 }));
 jest.mock("../../repositories/mentor.repository", () => ({
     mentorRepository: { countAccepted: jest.fn() },
+}));
+jest.mock("../../utils/jwt", () => ({
+    createTeamDashboardToken: jest.fn(() => "team_token"),
+    decodeTeamDashboardToken: jest.fn(() => ({
+        scope: "team-dashboard",
+        solutionId: "sub_1",
+        email: "asha@example.com",
+        phone: "9876543210",
+    })),
 }));
 
 const mockSolutionRepository = solutionRepository as jest.Mocked<typeof solutionRepository>;
@@ -77,6 +91,169 @@ describe("SolutionResolvers", () => {
             acceptedSolutions: 12,
             acceptedMentors: 5,
         });
+    });
+
+    it("returns a limited status view for a team lead contact", async () => {
+        const createdAt = new Date("2026-01-01");
+        mockSolutionRepository.findStatusByContact.mockResolvedValue(ok({
+            id: "sub_1",
+            problem_code: "P-001",
+            solution_title: "Mountain Link",
+            status: "pending",
+            reviewed_at: null,
+            created_at: createdAt,
+            updated_at: createdAt,
+        } as never));
+
+        const result = await solutionResolvers.Query.solutionStatus(null, {
+            contact: "asha@example.com",
+        });
+
+        expect(result).toEqual({
+            id: "sub_1",
+            problemCode: "P-001",
+            solutionTitle: "Mountain Link",
+            status: "pending",
+            reviewedAt: null,
+            createdAt,
+            updatedAt: createdAt,
+        });
+        expect(result).not.toHaveProperty("fullName");
+        expect(result).not.toHaveProperty("email");
+        expect(result).not.toHaveProperty("phone");
+    });
+
+    it("returns the team dashboard only for matching email and phone credentials", async () => {
+        const createdAt = new Date("2026-01-01");
+        mockSolutionRepository.findTeamDashboard.mockResolvedValue(ok({
+            solution: {
+                id: "sub_1",
+                full_name: "Asha Rawat",
+                email: "asha@example.com",
+                phone: "9876543210",
+                problem_code: "P-001",
+                solution_title: "Mountain Link",
+                solution_description: "Description",
+                prototype_url: null,
+                status: "pending",
+                created_at: createdAt,
+                updated_at: createdAt,
+            } as never,
+            members: [{
+                id: 4,
+                solution_id: "sub_1",
+                full_name: "Dev Bisht",
+                email: "dev@example.com",
+                phone: "9123456789",
+                created_at: createdAt,
+            } as never],
+        }));
+
+        const result = await solutionResolvers.Mutation.openTeamLeaderDashboard(null, {
+            email: "asha@example.com",
+            phone: "9876543210",
+        });
+
+        expect(mockSolutionRepository.findTeamDashboard).toHaveBeenCalledWith(
+            "asha@example.com",
+            "9876543210",
+        );
+        expect(result).toMatchObject({
+            accessToken: "team_token",
+            id: "sub_1",
+            solutionTitle: "Mountain Link",
+            members: [{ id: "4", fullName: "Dev Bisht" }],
+        });
+    });
+
+    it("resumes the dashboard from a scoped token without re-sending credentials", async () => {
+        const createdAt = new Date("2026-01-01");
+        mockSolutionRepository.findTeamDashboard.mockResolvedValue(ok({
+            solution: {
+                id: "sub_1",
+                full_name: "Asha Rawat",
+                email: "asha@example.com",
+                phone: "9876543210",
+                problem_code: "P-001",
+                solution_title: "Mountain Link",
+                solution_description: "Description",
+                prototype_url: null,
+                status: "pending",
+                created_at: createdAt,
+                updated_at: createdAt,
+            } as never,
+            members: [],
+        }));
+
+        const result = await solutionResolvers.Query.teamDashboard(null, { accessToken: "team_token" });
+
+        expect(decodeTeamDashboardToken).toHaveBeenCalledWith("team_token");
+        expect(mockSolutionRepository.findTeamDashboard).toHaveBeenCalledWith(
+            "asha@example.com",
+            "9876543210",
+        );
+        expect(result).toMatchObject({ accessToken: "team_token", id: "sub_1" });
+    });
+
+    it("uses a scoped team token when editing a solution", async () => {
+        mockSolutionRepository.updateByTeamLeader.mockResolvedValue(ok(true));
+
+        await expect(solutionResolvers.Mutation.updateTeamSolution(null, {
+            accessToken: "team_token",
+            input: {
+                solutionTitle: "Updated title",
+                solutionDescription: "Updated description",
+                prototypeUrl: "https://example.com/demo",
+            },
+        })).resolves.toBe(true);
+
+        expect(decodeTeamDashboardToken).toHaveBeenCalledWith("team_token");
+        expect(mockSolutionRepository.updateByTeamLeader).toHaveBeenCalledWith(
+            "asha@example.com",
+            "9876543210",
+            {
+                solutionTitle: "Updated title",
+                solutionDescription: "Updated description",
+                prototypeUrl: "https://example.com/demo",
+            },
+        );
+    });
+
+    it("returns the added team member", async () => {
+        const createdAt = new Date("2026-01-01");
+        mockSolutionRepository.addTeamMember.mockResolvedValue(ok({
+            id: 5,
+            solution_id: "sub_1",
+            full_name: "Meera Joshi",
+            email: "meera@example.com",
+            phone: "9988776655",
+            created_at: createdAt,
+        } as never));
+
+        const result = await solutionResolvers.Mutation.addSolutionTeamMember(null, {
+            accessToken: "team_token",
+            input: { fullName: "Meera Joshi", email: "meera@example.com", phone: "9988776655" },
+        });
+
+        expect(result).toEqual({
+            id: "5",
+            fullName: "Meera Joshi",
+            email: "meera@example.com",
+            phone: "9988776655",
+            createdAt,
+        });
+    });
+
+    it("rejects team mutations when the dashboard token is invalid", async () => {
+        jest.mocked(decodeTeamDashboardToken).mockImplementationOnce(() => {
+            throw ERRORS.INVALID_AUTH_TOKEN;
+        });
+
+        await expect(solutionResolvers.Mutation.updateTeamSolution(null, {
+            accessToken: "tampered",
+            input: { solutionTitle: "Title", solutionDescription: "Description" },
+        })).rejects.toMatchObject({ extensions: { code: "UNAUTHORIZED", errorCode: 20002 } });
+        expect(mockSolutionRepository.updateByTeamLeader).not.toHaveBeenCalled();
     });
 
     it("translates repository submission conflicts to GraphQL errors", async () => {

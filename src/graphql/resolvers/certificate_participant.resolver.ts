@@ -3,29 +3,28 @@ import { GraphQLError } from "graphql";
 import type { CertificateParticipantRow } from "../../models/certificate_participant.model";
 import { certificateParticipantRepository } from "../../repositories/certificate_participant.repository";
 import { solutionRepository } from "../../repositories/solution.repository";
-import { ERRORS } from "../../utils/error";
+import { ERRORS, type RequestError } from "../../utils/error";
 import createLogger from "../../utils/logger";
+import { toGraphQLError } from "../context";
 
 const logger = createLogger("@certificate-participant.resolver");
-
-export const CERTIFICATE_REGISTRATION_DEADLINE = new Date("2026-09-15T16:00:00+05:30");
 
 interface RegisterCertificateParticipantInput {
     fullName: string;
     email: string;
     phone: string;
-    institution: string;
+    institution?: string | null;
     course?: string | null;
-    city: string;
+    city?: string | null;
 }
 
 interface CertificateParticipantView {
     id: number;
     hash: string;
     fullName: string;
-    institution: string;
+    institution: string | null;
     course: string | null;
-    city: string;
+    city: string | null;
     issuedAt: Date;
 }
 
@@ -37,22 +36,27 @@ function badInput(message: string): never {
     throw new GraphQLError(message, { extensions: { code: "BAD_USER_INPUT", statusCode: 400 } });
 }
 
+function optionalText(value: string | null | undefined) {
+    const cleaned = cleanText(value ?? "");
+    return cleaned.length > 0 ? cleaned : null;
+}
+
 function validateInput(input: RegisterCertificateParticipantInput) {
     const normalized = {
         fullName: cleanText(input.fullName ?? ""),
         email: normalizeEmail(input.email ?? ""),
         phone: normalizePhone(input.phone ?? ""),
-        institution: cleanText(input.institution ?? ""),
-        course: input.course ? cleanText(input.course) : null,
-        city: cleanText(input.city ?? ""),
+        institution: optionalText(input.institution),
+        course: optionalText(input.course),
+        city: optionalText(input.city),
     };
 
     if (normalized.fullName.length < 2 || normalized.fullName.length > 120) badInput("Enter a valid full name");
     if (normalized.email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized.email)) badInput("Enter a valid email address");
     if (!/^[6-9]\d{9}$/.test(normalized.phone)) badInput("Enter a valid 10-digit Indian mobile number");
-    if (normalized.institution.length < 2 || normalized.institution.length > 180) badInput("Enter a valid institution or organisation");
+    if (normalized.institution && (normalized.institution.length < 2 || normalized.institution.length > 180)) badInput("Enter a valid institution or organisation");
     if (normalized.course && normalized.course.length > 160) badInput("Course must be 160 characters or fewer");
-    if (normalized.city.length < 2 || normalized.city.length > 120) badInput("Enter a valid city");
+    if (normalized.city && (normalized.city.length < 2 || normalized.city.length > 120)) badInput("Enter a valid city");
     return normalized;
 }
 
@@ -68,9 +72,12 @@ function toView(row: CertificateParticipantRow): CertificateParticipantView {
     };
 }
 
-function databaseFailure(): never {
-    throw new GraphQLError("Certificate service is temporarily unavailable", {
-        extensions: { code: "INTERNAL_SERVER_ERROR", statusCode: 500 },
+function repositoryFailure(operation: string, error: RequestError): never {
+    logger.error(`Certificate ${operation} failed`, error);
+    // Client-actionable failures (404/409/...) keep their own message; only infra faults are masked.
+    if (error.statusCode < 500) throw toGraphQLError(error);
+    throw new GraphQLError("Certificate service is temporarily unavailable. Please try again in a moment.", {
+        extensions: { code: "SERVICE_UNAVAILABLE", statusCode: 503, errorCode: error.code },
     });
 }
 
@@ -80,42 +87,58 @@ export const certificateParticipantResolvers = {
             const normalizedEmail = normalizeEmail(email ?? "");
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) badInput("Enter a valid email address");
             const result = await certificateParticipantRepository.findByEmail(normalizedEmail);
-            if (result.isErr()) databaseFailure();
+            if (result.isErr()) repositoryFailure("lookup by email", result.error);
             return result.value ? toView(result.value) : null;
-        },
-        certificateLookupByEmail: async (_: unknown, { email }: { email: string }) => {
-            const normalizedEmail = normalizeEmail(email ?? "");
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) badInput("Enter a valid email address");
-
-            const certificate = await certificateParticipantRepository.findByEmail(normalizedEmail);
-            if (certificate.isErr()) databaseFailure();
-            if (certificate.value) return { registered: true, certificate: toView(certificate.value) };
-
-            const registration = await solutionRepository.findByEmail(normalizedEmail);
-            if (registration.isErr()) databaseFailure();
-            return { registered: Boolean(registration.value), certificate: null };
         },
         certificateByHash: async (_: unknown, { hash }: { hash: string }): Promise<CertificateParticipantView | null> => {
             const normalizedHash = hash?.trim() ?? "";
             if (!/^[A-Za-z0-9_-]{24,64}$/.test(normalizedHash)) return null;
             const result = await certificateParticipantRepository.findByHash(normalizedHash);
-            if (result.isErr()) databaseFailure();
+            if (result.isErr()) repositoryFailure("lookup by hash", result.error);
             return result.value ? toView(result.value) : null;
         },
     },
     Mutation: {
-        registerCertificateParticipant: async (_: unknown, { input }: { input: RegisterCertificateParticipantInput }): Promise<CertificateParticipantView> => {
-            if (Date.now() >= CERTIFICATE_REGISTRATION_DEADLINE.getTime()) {
-                throw new GraphQLError("Certificate registration closed on 15 September 2026 at 4:00 PM IST", {
-                    extensions: { code: "REGISTRATION_CLOSED", statusCode: 410 },
-                });
-            }
+        certificateLookupByEmail: async (_: unknown, { email }: { email: string }) => {
+            const normalizedEmail = normalizeEmail(email ?? "");
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) badInput("Enter a valid email address");
 
+            const certificate = await certificateParticipantRepository.findByEmail(normalizedEmail);
+            if (certificate.isErr()) repositoryFailure("lookup by email", certificate.error);
+            if (certificate.value) return { registered: true, certificate: toView(certificate.value) };
+
+            const registration = await solutionRepository.findByEmail(normalizedEmail);
+            if (registration.isErr()) repositoryFailure("registration lookup", registration.error);
+            if (!registration.value) return { registered: false, certificate: null };
+
+            const created = await certificateParticipantRepository.create({
+                hash: randomBytes(24).toString("base64url"),
+                fullName: registration.value.full_name,
+                email: registration.value.normalized_email,
+                phone: registration.value.normalized_phone,
+                institution: null,
+                course: null,
+                city: null,
+            });
+            if (created.isOk()) return { registered: true, certificate: toView(created.value) };
+
+            if (created.error === ERRORS.DUPLICATE_RESOURCE) {
+                const existing = await certificateParticipantRepository.findByEmailOrPhone(
+                    normalizedEmail,
+                    registration.value.normalized_phone,
+                );
+                if (existing.isOk() && existing.value) {
+                    return { registered: true, certificate: toView(existing.value) };
+                }
+            }
+            repositoryFailure("generation", created.error);
+        },
+        registerCertificateParticipant: async (_: unknown, { input }: { input: RegisterCertificateParticipantInput }): Promise<CertificateParticipantView> => {
             const normalized = validateInput(input);
             const registration = await solutionRepository.findByEmail(normalized.email);
-            if (registration.isErr()) databaseFailure();
+            if (registration.isErr()) repositoryFailure("registration lookup", registration.error);
             if (!registration.value) {
-                throw new GraphQLError("You are not registered. Please register first to get a participation certificate.", {
+                throw new GraphQLError("No accepted hackathon registration matches this email address. Certificates are issued once a submission has been accepted.", {
                     extensions: { code: "NOT_REGISTERED", statusCode: 403 },
                 });
             }
@@ -132,11 +155,10 @@ export const certificateParticipantResolvers = {
             if (result.isErr()) {
                 if (result.error === ERRORS.DUPLICATE_RESOURCE) {
                     throw new GraphQLError("A certificate already exists for this email address or mobile number", {
-                        extensions: { code: "DUPLICATE_RESOURCE", statusCode: 409 },
+                        extensions: { code: "DUPLICATE_RESOURCE", statusCode: 409, errorCode: ERRORS.DUPLICATE_RESOURCE.code },
                     });
                 }
-                logger.error("Error registering certificate participant", result.error);
-                databaseFailure();
+                repositoryFailure("registration", result.error);
             }
             return toView(result.value);
         },

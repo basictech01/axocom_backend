@@ -42,6 +42,20 @@ class CertificateParticipantRepository {
         return this.findOne("hash", hash);
     }
 
+    async findByEmailOrPhone(email: string, phone: string): Promise<Result<CertificateParticipantRow | null, RequestError>> {
+        try {
+            const [rows] = await db.execute<CertificateParticipantRow[]>(
+                `SELECT * FROM ${CERTIFICATE_PARTICIPANT_TABLE}
+                 WHERE email_normalized = ? OR phone_normalized = ? LIMIT 1`,
+                [email, phone],
+            );
+            return ok(rows[0] ?? null);
+        } catch (error) {
+            logger.error("Error finding certificate participant by email or phone", error);
+            return err(ERRORS.DATABASE_ERROR);
+        }
+    }
+
     private async findOne(column: "email_normalized" | "hash", value: string): Promise<Result<CertificateParticipantRow | null, RequestError>> {
         try {
             const [rows] = await db.execute<CertificateParticipantRow[]>(

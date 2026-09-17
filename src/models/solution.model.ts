@@ -1,6 +1,7 @@
 import type { RowDataPacket } from "mysql2";
 
 export const SOLUTION_SUBMISSIONS_TABLE = "solution_submissions";
+export const SOLUTION_TEAM_MEMBERS_TABLE = "solution_team_members";
 
 export const CREATE_SOLUTION_SUBMISSIONS_TABLE = `
 CREATE TABLE IF NOT EXISTS solution_submissions (
@@ -51,6 +52,35 @@ export interface SolutionSubmissionRow extends RowDataPacket {
     created_at: Date;
     updated_at: Date;
 }
+
+export interface SolutionTeamMemberRow extends RowDataPacket {
+    id: number;
+    solution_id: string;
+    full_name: string;
+    email: string;
+    normalized_email: string;
+    phone: string;
+    normalized_phone: string;
+    created_at: Date;
+}
+
+export interface CertificateEligibleRegistration extends RowDataPacket {
+    full_name: string;
+    normalized_email: string;
+    normalized_phone: string;
+}
+
+export type TeamMemberInput = {
+    fullName: string;
+    email: string;
+    phone: string;
+};
+
+export type UpdateTeamSolutionInput = {
+    solutionTitle: string;
+    solutionDescription: string;
+    prototypeUrl?: string | null;
+};
 
 export type PublicSolution = Pick<
     SolutionSubmissionRow,
