@@ -12,7 +12,7 @@ import createLogger from "../../utils/logger";
 
 const logger = createLogger("@certificate-participant.resolver");
 
-export const CERTIFICATE_REGISTRATION_DEADLINE = new Date("2026-09-15T16:00:00+05:30");
+export const CERTIFICATE_REGISTRATION_DEADLINE = new Date("2026-09-18T23:59:59+05:30");
 
 /**
  * Team entries originally recorded only the lead, so teammates had no way to get
@@ -206,7 +206,7 @@ export const certificateParticipantResolvers = {
             // registered on a team entry get the later teammate window.
             let registered: { full_name: string; normalized_phone: string };
             if (registration.value) {
-                if (Date.now() >= CERTIFICATE_REGISTRATION_DEADLINE.getTime()) closed("15 September 2026 at 4:00 PM IST");
+                if (Date.now() >= CERTIFICATE_REGISTRATION_DEADLINE.getTime()) closed("18 September 2026 at 11:59 PM IST");
                 registered = registration.value;
             } else {
                 const member = await teamMemberRepository.findByEmail(normalized.email);

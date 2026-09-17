@@ -138,7 +138,7 @@ describe("certificate participant resolvers", () => {
         ).rejects.toMatchObject({ extensions: { code: "DUPLICATE_RESOURCE" } });
 
         jest.clearAllMocks();
-        jest.setSystemTime(new Date("2026-09-15T16:00:00+05:30"));
+        jest.setSystemTime(new Date("2026-09-18T23:59:59+05:30"));
         await expect(
             certificateParticipantResolvers.Mutation.registerCertificateParticipant(null, { input }),
         ).rejects.toMatchObject({ extensions: { code: "REGISTRATION_CLOSED" } });
@@ -155,7 +155,7 @@ describe("team certificates", () => {
         jest.restoreAllMocks();
         jest.useFakeTimers();
         // After individual registration closed, inside the teammate window.
-        jest.setSystemTime(new Date("2026-09-16T12:00:00+05:30"));
+        jest.setSystemTime(new Date("2026-09-19T12:00:00+05:30"));
         jest.spyOn(solutionRepository, "findByEmail").mockImplementation(async (email) => ok(
             email === "student@example.com"
                 ? {
