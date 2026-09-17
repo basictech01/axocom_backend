@@ -147,15 +147,16 @@ describe('ElectionResult integration(schema + resolvers)', () => {
             if (body.kind === 'single') {
                 const { data, errors } = body.singleResult;
                 expect(errors).toBeUndefined();
-                expect(data?.election_results).toHaveLength(2);
-                expect(data?.election_results[0]).toMatchObject({
+                const electionResults = data?.election_results as Array<Record<string, unknown>>;
+                expect(electionResults).toHaveLength(2);
+                expect(electionResults[0]).toMatchObject({
                     id: 1,
                     election_candidate_id: 10,
                     votes_polled: 50000,
                     position: 1,
                     status: 'Won',
                 });
-                expect(data?.election_results[1]).toMatchObject({
+                expect(electionResults[1]).toMatchObject({
                     id: 2,
                     election_candidate_id: 11,
                     votes_polled: 35000,

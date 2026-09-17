@@ -3,9 +3,13 @@ import { solutionRepository } from "./solution.repository";
 import { ERRORS } from "../utils/error";
 
 const mockExecute = jest.fn<(...args: any[]) => Promise<any>>();
+const mockGetConnection = jest.fn<(...args: any[]) => Promise<any>>();
 
 jest.mock("../dataconfig/db", () => ({
-    db: { execute: (...args: any[]) => mockExecute(...args) },
+    db: {
+        execute: (...args: any[]) => mockExecute(...args),
+        getConnection: (...args: any[]) => mockGetConnection(...args),
+    },
 }));
 
 const validInput = {
@@ -22,6 +26,7 @@ const validInput = {
 describe("SolutionRepository", () => {
     beforeEach(() => {
         mockExecute.mockReset();
+        mockGetConnection.mockReset();
     });
 
     it("creates a pending submission with normalized identity fields", async () => {
@@ -76,6 +81,53 @@ describe("SolutionRepository", () => {
         expect(mockExecute).not.toHaveBeenCalled();
     });
 
+    it("rejects malformed emails and whitespace-only required fields", async () => {
+        const invalidEmail = await solutionRepository.create({ ...validInput, email: "not-an-email" });
+        const blankTitle = await solutionRepository.create({ ...validInput, solutionTitle: "   " });
+
+        expect(invalidEmail.isErr()).toBe(true);
+        expect(blankTitle.isErr()).toBe(true);
+        expect(mockExecute).not.toHaveBeenCalled();
+    });
+
+    it("keeps connection failures inside the repository Result contract", async () => {
+        mockGetConnection.mockRejectedValue(new Error("pool unavailable"));
+
+        const result = await solutionRepository.addTeamMember(
+            "asha@example.com",
+            "9876543210",
+            { fullName: "Dev Bisht", email: "dev@example.com", phone: "9123456789" },
+        );
+
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) expect(result.error).toBe(ERRORS.DATABASE_ERROR);
+    });
+
+    it("allows at most three additional members beside the leader", async () => {
+        const connectionExecute = jest.fn<(...args: any[]) => Promise<any>>()
+            .mockResolvedValueOnce([[{ id: "sub_1" }], []])
+            .mockResolvedValueOnce([[{ total: 3 }], []]);
+        const connection = {
+            beginTransaction: jest.fn(async () => undefined),
+            execute: connectionExecute,
+            rollback: jest.fn(async () => undefined),
+            commit: jest.fn(async () => undefined),
+            release: jest.fn(),
+        };
+        mockGetConnection.mockResolvedValue(connection);
+
+        const result = await solutionRepository.addTeamMember(
+            "asha@example.com",
+            "9876543210",
+            { fullName: "Fourth Extra", email: "fourth@example.com", phone: "9123456789" },
+        );
+
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) expect(result.error).toBe(ERRORS.TEAM_LIMIT_REACHED);
+        expect(connection.rollback).toHaveBeenCalled();
+        expect(connection.release).toHaveBeenCalled();
+    });
+
     it("maps duplicate database keys to the domain duplicate error", async () => {
         mockExecute.mockRejectedValue({ code: "ER_DUP_ENTRY" });
 
@@ -85,7 +137,7 @@ describe("SolutionRepository", () => {
         if (result.isErr()) expect(result.error).toBe(ERRORS.DUPLICATE_SUBMISSION);
     });
 
-    it("finds a certificate-eligible registration by normalized email", async () => {
+    it("finds a leader only when their solution is accepted", async () => {
         const row = {
             id: "sub_1",
             full_name: "Asha Rawat",
@@ -98,10 +150,58 @@ describe("SolutionRepository", () => {
 
         expect(result.isOk()).toBe(true);
         if (result.isOk()) expect(result.value).toEqual(row);
+        const [query, parameters] = mockExecute.mock.calls[0];
+        expect(query).toMatch(/FROM solution_submissions[\s\S]*status = 'accepted'/);
+        expect(parameters).toEqual(["asha@example.com"]);
+        expect(mockExecute).toHaveBeenCalledTimes(1);
+    });
+
+    it("finds an accepted team member through the submissions join", async () => {
+        const row = {
+            full_name: "Dev Bisht",
+            normalized_email: "dev@example.com",
+            normalized_phone: "9123456789",
+        };
+        mockExecute
+            .mockResolvedValueOnce([[], []])
+            .mockResolvedValueOnce([[row], []]);
+
+        const result = await solutionRepository.findByEmail(" DEV@Example.COM ");
+
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) expect(result.value).toEqual(row);
+        const [query, parameters] = mockExecute.mock.calls[1];
+        expect(query).toMatch(/FROM solution_team_members AS member[\s\S]*INNER JOIN solution_submissions AS submission/);
+        expect(query).toContain("submission.id = member.solution_id");
+        expect(query).not.toContain("COLLATE");
+        expect(query).toMatch(/submission\.status = 'accepted'/);
+        expect(parameters).toEqual(["dev@example.com"]);
+    });
+
+    it.each([
+        [" ASHA@Example.COM ", "normalized_email", "asha@example.com"],
+        ["+91 98765-43210", "normalized_phone", "9876543210"],
+    ])("finds status by normalized contact %s", async (contact, column, normalized) => {
+        const row = { id: "sub_1", status: "pending" };
+        mockExecute.mockResolvedValue([[row], []]);
+
+        const result = await solutionRepository.findStatusByContact(contact);
+
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) expect(result.value).toEqual(row);
         expect(mockExecute).toHaveBeenCalledWith(
-            expect.stringContaining("WHERE normalized_email = ?"),
-            ["asha@example.com"]
+            expect.stringContaining(`WHERE ${column} = ?`),
+            [normalized]
         );
+        expect(mockExecute.mock.calls[0][0]).not.toContain("full_name");
+    });
+
+    it("rejects an invalid status contact without querying the database", async () => {
+        const result = await solutionRepository.findStatusByContact("12345");
+
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) expect(result.error).toBe(ERRORS.INVALID_REQUEST_BODY);
+        expect(mockExecute).not.toHaveBeenCalled();
     });
 
     it("lists accepted solutions with filters and pagination metadata", async () => {

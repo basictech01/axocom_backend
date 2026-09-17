@@ -104,6 +104,8 @@ export const ERRORS = {
     SOLUTION_NOT_FOUND: new RequestError("Solution submission not found", 60003, 404),
     MENTOR_NOT_FOUND: new RequestError("Mentor application not found", 60004, 404),
     INVALID_REVIEW_STATUS: new RequestError("Invalid review status", 60005, 400),
+    TEAM_LIMIT_REACHED: new RequestError("A team can have at most three members in addition to the team lead", 60006, 409),
+    TEAM_MEMBER_EXISTS: new RequestError("This email or phone is already registered for the hackathon", 60007, 409),
 
     // Summit registration errors (7xxxx)
     DELEGATE_PASS_NOT_FOUND: new RequestError("Delegate pass registration not found", 70001, 404),

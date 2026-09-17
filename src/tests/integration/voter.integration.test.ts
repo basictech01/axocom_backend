@@ -216,13 +216,14 @@ describe('Voter integration(schema + resolvers)', () => {
             if (body.kind === 'single') {
                 const { data, errors } = body.singleResult;
                 expect(errors).toBeUndefined();
-                expect(data?.voters).toHaveLength(2);
-                expect(data?.voters[0]).toMatchObject({
+                const voters = data?.voters as Array<Record<string, unknown>>;
+                expect(voters).toHaveLength(2);
+                expect(voters[0]).toMatchObject({
                     id: 1,
                     epic_number: 'EPIC001',
                     first_name_english: 'John',
                 });
-                expect(data?.voters[1]).toMatchObject({
+                expect(voters[1]).toMatchObject({
                     id: 2,
                     epic_number: 'EPIC002',
                     first_name_english: 'Jane',

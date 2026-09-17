@@ -10,6 +10,37 @@ export interface TokenData {
     name?: string;
 }
 
+export interface TeamDashboardTokenData {
+    scope: 'team-dashboard';
+    solutionId: string;
+    email: string;
+    phone: string;
+}
+
+export function createTeamDashboardToken(data: TeamDashboardTokenData): string {
+    if (!JWT_SECRET) throw ERRORS.JWT_SECRET_NOT_CONFIGURED;
+    return jwt.sign(data, JWT_SECRET, { expiresIn: '2h' });
+}
+
+export function decodeTeamDashboardToken(token: string): TeamDashboardTokenData {
+    if (!JWT_SECRET) throw ERRORS.JWT_SECRET_NOT_CONFIGURED;
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (
+            typeof decoded === 'string'
+            || decoded.scope !== 'team-dashboard'
+            || typeof decoded.solutionId !== 'string'
+            || typeof decoded.email !== 'string'
+            || typeof decoded.phone !== 'string'
+        ) throw ERRORS.INVALID_AUTH_TOKEN;
+        return decoded as TeamDashboardTokenData;
+    } catch (error) {
+        if (error === ERRORS.JWT_SECRET_NOT_CONFIGURED) throw error;
+        if (error instanceof jwt.TokenExpiredError) throw ERRORS.TOKEN_EXPIRED;
+        throw ERRORS.INVALID_AUTH_TOKEN;
+    }
+}
+
 export function createAuthToken(user: TokenData): string {
     if (!JWT_SECRET) {
         throw ERRORS.JWT_SECRET_NOT_CONFIGURED;

@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS hackathon_certificate_participants (
     full_name VARCHAR(120) NOT NULL,
     email_normalized VARCHAR(254) NOT NULL UNIQUE,
     phone_normalized VARCHAR(20) NOT NULL UNIQUE,
-    institution VARCHAR(180) NOT NULL,
+    institution VARCHAR(180) NULL,
     course VARCHAR(160) NULL,
-    city VARCHAR(120) NOT NULL,
+    city VARCHAR(120) NULL,
     issued_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -23,9 +23,9 @@ export interface CertificateParticipantRow extends RowDataPacket {
     full_name: string;
     email_normalized: string;
     phone_normalized: string;
-    institution: string;
+    institution: string | null;
     course: string | null;
-    city: string;
+    city: string | null;
     issued_at: Date;
     created_at: Date;
 }
@@ -35,7 +35,7 @@ export interface CreateCertificateParticipantRecord {
     fullName: string;
     email: string;
     phone: string;
-    institution: string;
+    institution: string | null;
     course: string | null;
-    city: string;
+    city: string | null;
 }

@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { err, ok } from "neverthrow";
 import { ERRORS } from "../../utils/error";
 import type { CertificateParticipantRow } from "../../models/certificate_participant.model";
@@ -22,8 +22,6 @@ const row = {
 describe("certificate participant resolvers", () => {
     beforeEach(() => {
         jest.restoreAllMocks();
-        jest.useFakeTimers();
-        jest.setSystemTime(new Date("2026-09-11T10:00:00.000Z"));
         jest.spyOn(solutionRepository, "findByEmail").mockResolvedValue(ok({
             id: "registered-submission",
             full_name: "Sample Student",
@@ -52,19 +50,31 @@ describe("certificate participant resolvers", () => {
         ).resolves.toBeNull();
     });
 
-    it("distinguishes an unregistered email from a registered email without a certificate", async () => {
+    it("distinguishes an unregistered email and generates a missing certificate", async () => {
         jest.spyOn(certificateParticipantRepository, "findByEmail").mockResolvedValue(ok(null));
+        const create = jest.spyOn(certificateParticipantRepository, "create").mockResolvedValue(ok(row));
         const registrationLookup = jest.spyOn(solutionRepository, "findByEmail");
 
         registrationLookup.mockResolvedValueOnce(ok(null));
         await expect(
-            certificateParticipantResolvers.Query.certificateLookupByEmail(null, { email: "missing@example.com" }),
+            certificateParticipantResolvers.Mutation.certificateLookupByEmail(null, { email: "missing@example.com" }),
         ).resolves.toEqual({ registered: false, certificate: null });
 
-        registrationLookup.mockResolvedValueOnce(ok({} as never));
+        registrationLookup.mockResolvedValueOnce(ok({
+            full_name: "Sample Student",
+            normalized_email: "student@example.com",
+            normalized_phone: "9876543210",
+        } as never));
         await expect(
-            certificateParticipantResolvers.Query.certificateLookupByEmail(null, { email: "student@example.com" }),
-        ).resolves.toEqual({ registered: true, certificate: null });
+            certificateParticipantResolvers.Mutation.certificateLookupByEmail(null, { email: "student@example.com" }),
+        ).resolves.toEqual({ registered: true, certificate: expect.objectContaining({ hash: row.hash }) });
+        expect(create).toHaveBeenCalledWith(expect.objectContaining({
+            fullName: "Sample Student",
+            email: "student@example.com",
+            phone: "9876543210",
+            institution: null,
+            city: null,
+        }));
     });
 
     it("rejects certificate creation for an email without a hackathon registration", async () => {
@@ -104,8 +114,19 @@ describe("certificate participant resolvers", () => {
         expect(result).not.toHaveProperty("phone");
     });
 
-    it("returns stable errors for duplicates and the deadline", async () => {
+    it("accepts a registration without optional institution and city details", async () => {
         const create = jest.spyOn(certificateParticipantRepository, "create")
+            .mockImplementation(async (input) => ok({ ...row, hash: input.hash }));
+
+        await certificateParticipantResolvers.Mutation.registerCertificateParticipant(null, {
+            input: { fullName: "Sample Student", email: "student@example.com", phone: "9876543210" },
+        });
+
+        expect(create).toHaveBeenCalledWith(expect.objectContaining({ institution: null, city: null, course: null }));
+    });
+
+    it("returns a stable error for duplicates", async () => {
+        jest.spyOn(certificateParticipantRepository, "create")
             .mockResolvedValue(err(ERRORS.DUPLICATE_RESOURCE));
         const input = {
             fullName: "Sample Student", email: "student@example.com", phone: "9876543210",
@@ -114,16 +135,5 @@ describe("certificate participant resolvers", () => {
         await expect(
             certificateParticipantResolvers.Mutation.registerCertificateParticipant(null, { input }),
         ).rejects.toMatchObject({ extensions: { code: "DUPLICATE_RESOURCE" } });
-
-        jest.clearAllMocks();
-        jest.setSystemTime(new Date("2026-09-15T16:00:00+05:30"));
-        await expect(
-            certificateParticipantResolvers.Mutation.registerCertificateParticipant(null, { input }),
-        ).rejects.toMatchObject({ extensions: { code: "REGISTRATION_CLOSED" } });
-        expect(create).not.toHaveBeenCalled();
     });
-});
-
-afterAll(async () => {
-    jest.useRealTimers();
 });

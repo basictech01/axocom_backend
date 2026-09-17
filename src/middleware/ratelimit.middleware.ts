@@ -19,6 +19,11 @@ const CERTIFICATE_OPERATIONS = [
     "registerCertificateParticipant",
 ];
 
+const TEAM_LEADER_OPERATIONS = [
+    "solutionStatus",
+    "openTeamLeaderDashboard",
+];
+
 /** A tighter public limit for certificate registration and lookup only. */
 export const certificateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -35,6 +40,27 @@ export const certificateLimiter = rateLimit({
     message: {
         errors: [{
             message: "Too many certificate requests. Please try again later.",
+            extensions: { code: "RATE_LIMITED", statusCode: 429 },
+        }],
+    },
+});
+
+/** A tighter public limit to protect against contact enumeration and brute-force logins. */
+export const teamLeaderLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => {
+        const operationName = typeof req.body?.operationName === "string" ? req.body.operationName : "";
+        const query = typeof req.body?.query === "string" ? req.body.query : "";
+        return !TEAM_LEADER_OPERATIONS.some(
+            (operation) => operationName === operation || query.includes(operation),
+        );
+    },
+    message: {
+        errors: [{
+            message: "Too many status or team portal requests. Please try again later.",
             extensions: { code: "RATE_LIMITED", statusCode: 429 },
         }],
     },

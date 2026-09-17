@@ -237,12 +237,13 @@ describe('Candidate integration(schema + resolvers)', () => {
             if (body.kind === 'single') {
                 const { data, errors } = body.singleResult;
                 expect(errors).toBeUndefined();
-                expect(data?.candidates).toHaveLength(2);
-                expect(data?.candidates[0]).toMatchObject({
+                const candidates = data?.candidates as Array<Record<string, unknown>>;
+                expect(candidates).toHaveLength(2);
+                expect(candidates[0]).toMatchObject({
                     id: 1,
                     name: 'Candidate One',
                 });
-                expect(data?.candidates[1]).toMatchObject({
+                expect(candidates[1]).toMatchObject({
                     id: 2,
                     name: 'Candidate Two',
                 });

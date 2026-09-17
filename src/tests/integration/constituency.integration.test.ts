@@ -142,13 +142,14 @@ describe('Constituency integration(schema + resolvers)', () => {
             if (body.kind === 'single') {
                 const { data, errors } = body.singleResult;
                 expect(errors).toBeUndefined();
-                expect(data?.constituencies).toHaveLength(2);
-                expect(data?.constituencies[0]).toMatchObject({
+                const constituencies = data?.constituencies as Array<Record<string, unknown>>;
+                expect(constituencies).toHaveLength(2);
+                expect(constituencies[0]).toMatchObject({
                     id: 1,
                     name: 'Mumbai North',
                     state: 'Maharashtra',
                 });
-                expect(data?.constituencies[1]).toMatchObject({
+                expect(constituencies[1]).toMatchObject({
                     id: 2,
                     name: 'Mumbai South',
                     state: 'Maharashtra',

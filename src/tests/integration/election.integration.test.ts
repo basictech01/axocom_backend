@@ -149,13 +149,14 @@ describe('Election integration(schema + resolvers)', () => {
             if (body.kind === 'single') {
                 const { data, errors } = body.singleResult;
                 expect(errors).toBeUndefined();
-                expect(data?.elections).toHaveLength(2);
-                expect(data?.elections[0]).toMatchObject({
+                const elections = data?.elections as Array<Record<string, unknown>>;
+                expect(elections).toHaveLength(2);
+                expect(elections[0]).toMatchObject({
                     id: 1,
                     name: 'Lok Sabha 2024',
                     year: 2024,
                 });
-                expect(data?.elections[1]).toMatchObject({
+                expect(elections[1]).toMatchObject({
                     id: 2,
                     name: 'State Assembly 2023',
                     year: 2023,

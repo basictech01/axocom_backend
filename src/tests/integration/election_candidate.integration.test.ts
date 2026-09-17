@@ -148,13 +148,14 @@ describe('ElectionCandidate integration(schema + resolvers)', () => {
             if (body.kind === 'single') {
                 const { data, errors } = body.singleResult;
                 expect(errors).toBeUndefined();
-                expect(data?.election_candidates).toHaveLength(2);
-                expect(data?.election_candidates[0]).toMatchObject({
+                const electionCandidates = data?.election_candidates as Array<Record<string, unknown>>;
+                expect(electionCandidates).toHaveLength(2);
+                expect(electionCandidates[0]).toMatchObject({
                     id: 1,
                     election_id: 10,
                     candidate_id: 100,
                 });
-                expect(data?.election_candidates[1]).toMatchObject({
+                expect(electionCandidates[1]).toMatchObject({
                     id: 2,
                     election_id: 10,
                     candidate_id: 101,
